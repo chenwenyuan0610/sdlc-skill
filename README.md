@@ -41,6 +41,8 @@
 - 重複執行是安全的，之後有新版直接再跑一次就是更新，不會貼出重複內容
 
 > 不想跑腳本、或想確切知道它動了什麼 → `skills/sdlc-orchestrator/INSTALL.md` 有手動安裝步驟。
+>
+> **手動安裝提醒**：`skills/sdlc-orchestrator/claude_sdlc.md` 是專案 `CLAUDE.md` 的流程入口參考範本（Codex 可對應放進 `AGENTS.md`）。如果自行把 `skills/` 與 `agents/` 放進工具的標準目錄，記得同時參考這份檔案設定專案規則，這樣才能觸發 SDLC skill。
 
 ## 怎麼用
 
