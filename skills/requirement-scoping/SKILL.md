@@ -1,0 +1,60 @@
+---
+name: requirement-scoping
+description: TRIGGER when 已有可行方案（來自 product-discovery 或使用者直接提供），要收斂成具體功能清單、劃定範圍、排優先序、寫需求規格、盤點風險。DO NOT TRIGGER when 需求都還沒發想（→ product-discovery）或已經是明確規格要直接開發（→ 使用環境既有的功能開發流程）。
+---
+
+# Requirement Scoping — SDLC Phase 2 需求分析
+
+依 `../sdlc-orchestrator/SDLC_主流程版_IAO.md` 步驟 6-10，把「可行方案」收斂成正式需求規格書。**對話式引導，Lead + 使用者共同拍板，不派 agent 執行**（步驟10可選派風險掃描）。
+
+## 提問規則（本階段所有對使用者的提問一體適用）
+向需求方提問 **MUST 選項化**：每題附 2-4 個具體選項（把你最建議的放第一個並標「建議」），讓使用者勾選或回編號即可；自由補充永遠允許——選項是降低回答成本，不是限制答案。一次一批 ≤5 題；後面的題目依賴前面答案時分批問。**禁止純開放式問題轟炸**——把你能推測的先寫成具體選項讓使用者確認，猜不出來的才開放問。範圍/優先序這類拍板題，把「做/不做」「先後」直接做成可勾的清單。
+
+## 觸發條件
+- 已有明確的可行方案（不論是否經過 product-discovery），要往下細化成可執行的規格
+- 不適用：方案還沒定 → 先回 product-discovery
+
+## 完成條件（Phase Exit Criteria）
+5 個步驟的 Output 都產出，且通過本階段專屬檢查（完整條目 → `references/phase-exit-criteria.md`）：
+1. 功能清單
+2. 範圍界定（做/不做）
+3. 排序後功能清單
+4. 需求規格書
+5. 依賴/風險/限制清單
+
+## 持久化
+5 個 Output MUST 寫成 markdown 檔案存進專案的 `docs/` 資料夾（例如 `docs/requirements-spec.md`、`docs/dependencies-risks.md`）；專案尚無 `docs/` 資料夾就直接建立，不用先問使用者。不可只留在對話紀錄裡，檔案不存在視為本階段未完成。
+
+## 流程
+
+### 步驟 6：收斂功能清單
+- Action：把可行方案拆成具體功能項目
+- 誰做：Lead 對話
+- Output：功能清單
+
+### 步驟 7：劃定範圍
+- Action：決定這一版做/不做什麼
+- 誰做：Lead 提案，使用者拍板（**範圍決定權在使用者，不是 Lead 自己決定**）
+- Output：範圍界定
+
+### 步驟 8：功能優先排序
+- Action：依重要性/急迫性排序 in-scope 功能
+- 誰做：Lead + 使用者
+- Output：排序後功能清單
+
+### 步驟 9：撰寫需求規格文件
+- Action：把每個功能寫成正式規格（細節、規則）
+- 誰做：Lead 撰寫，使用者審閱確認
+- Output：需求規格書
+
+### 步驟 10：盤點依賴、風險與限制
+- Action：找技術依賴、風險、限制
+- 誰做：Lead 對話；範圍較大或涉及既有系統時，可選派 `general-purpose` agent 做風險掃描。**唯讀**：只給 Read/Glob/Grep/WebSearch，不給 Edit/Write，這階段還沒真的要動手實作，agent 只做調查不做決策
+- Output：依賴/風險/限制清單
+
+## 停止條件
+- 範圍界定卡住（使用者一直想擴大範圍）→ 提醒 scope creep 風險，但範圍決定權仍在使用者
+- 發現前面階段（`product-discovery`）的產出有問題，例如需求規格書寫到一半發現跟原始問題陳述矛盾 → 明確告知使用者要回 `product-discovery` 重新確認，不要在已知有問題的情況下把需求規格書硬寫完
+
+## 下一步
+5 個 Output 都有了 → 提示使用者可以接著用 `system-design` 做系統設計。**不自動呼叫**，只是提醒。

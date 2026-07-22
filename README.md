@@ -1,92 +1,77 @@
-# sdlc-skill
+# SDLC 開發流程包 — 給團隊夥伴
 
+嗨，這是一套「從需求到維運」的 AI 協作開發流程。裝進你的專案後，不管你用 Claude Code 還是 Codex，AI 都會照同一套有紀律的流程幫你把專案做完，而且每個階段的產出都會存成文件，不會只留在對話裡消失。
 
+## 這是什麼
 
-## Getting started
+一套 9 個階段的開發流程，對應軟體開發的 8 大階段 + 1 個變更分診：
 
-To make it easy for you to get started with GitLab, here's a list of recommended next steps.
+需求發想 → 需求分析 → 設計 → 開發前準備 → 開發實作 → 測試 → 部署 → 維運（＋隨時可用的「變更分診」）
 
-Already a pro? Just edit this README.md and make it your own. Want to make it easy? [Use the template at the bottom](#editing-this-readme)!
+每個階段是一份獨立的 skill，AI 會依你專案目前的狀態自動判斷該進哪一階段。**核心特色**：每階段的產出（需求規格、設計文件、開發排程、測試結果…）都會被寫成 `docs/` 資料夾裡的 markdown 檔，所以任何人（或任何一次新的 AI 對話）接手時，打開 `docs/` 就知道專案走到哪、下一步做什麼。
 
-## Add your files
+## 怎麼裝（約 1 分鐘）
 
-- [ ] [Create](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#create-a-file) or [upload](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#upload-a-file) files
-- [ ] [Add files using the command line](https://docs.gitlab.com/ee/gitlab-basics/add-file.html#add-a-file-using-the-command-line) or push an existing Git repository with the following command:
+解壓縮後，**在這個資料夾裡開一個終端機**，然後執行：
+
+| 你的系統 | 指令 |
+|---------|------|
+| macOS / Linux | `python3 install.py` |
+| Windows | `py install.py` |
+
+> **怎麼在資料夾裡開終端機？**
+> macOS：在 Finder 對著資料夾按右鍵 → 服務 → 新增位於資料夾的終端機視窗
+> Windows：在檔案總管進到該資料夾，在上方網址列直接打 `cmd` 按 Enter
+>
+> 需要 Python 3.8 以上，不必安裝任何套件。macOS 沒有 `python` 這個指令（只有 `python3`），照上表用就好。
+
+它會依序問你三件事：
+
+1. **安裝範圍** —— 選「個人／全域」（這台電腦上的所有專案）或「單一專案／工作區」。只有專案安裝才會再問專案根目錄；請選專案本身，**不要選 `.claude`、`.codex`、`.agents` 或其中的子資料夾**
+2. **流程入口寫進哪個檔** —— 個人安裝只會提供全域 Claude Code `~/.claude/CLAUDE.md` 與全域 Codex `$CODEX_HOME/AGENTS.md`（未設定時是 `~/.codex/AGENTS.md`）；專案安裝只會提供專案根目錄的 `CLAUDE.md` 與 `AGENTS.md`
+3. **skill 與角色檔各自放哪裡** —— 兩者會分開詢問；每題都可選 Claude Code 標準位置、Codex 標準位置，或依個人習慣輸入其他精確目錄。和上一步規則檔相符的選項會排第一並設為預設
+
+接著才會開始安裝；不存在的選定目錄會在安全檢查通過後自動建立，最後會印出裝了什麼到哪裡。
+
+幾個你不用擔心的地方：
+
+- 專案安裝時，**專案根目錄可以直接拖進終端機**，不必自己打字；若誤選 `.claude` / `.codex` / `.agents` 或其中的子資料夾，安裝程式會提示並請你重選，不會建立重複的工具設定目錄
+- 已經有 `CLAUDE.md` / `AGENTS.md` 的話會**附加**在後面，不會覆蓋你既有的內容（動到之前一律先備份）
+- 你原本就有同名的 skill 也不會被刪掉，會移到旁邊並告訴你位置
+- 重複執行是安全的，之後有新版直接再跑一次就是更新，不會貼出重複內容
+
+> 不想跑腳本、或想確切知道它動了什麼 → `skills/sdlc-orchestrator/INSTALL.md` 有手動安裝步驟。
+
+## 怎麼用
+
+裝好之後，正常跟你的 AI 講話就好：
+
+- **全新想法**：「我想做一個 XXX 工具」→ AI 會從需求發想開始，一步步引導你，每階段產出存進 `docs/`
+- **接手做到一半的專案**：直接說「繼續」→ AI 會看 `docs/` 裡已有哪些檔案，自動判斷該從哪個階段接下去
+- **想確認進度**：打開專案的 `docs/` 資料夾看檔案，或問 AI「現在在哪個階段」
+
+## 怎麼確認裝對了
+
+**先完全關閉再重新開啟 Claude Code / Codex** —— 工具通常在啟動時載入規則與 skill，這是最常見的「裝了沒反應」原因。
+
+然後輸入 `/`，應該能看到這 9 個 skill（**名字裡沒有 sdlc 字樣**，別找錯）：
 
 ```
-cd existing_repo
-git remote add origin https://gitlab-cloud.hitrustai.com/ec/3dsscloud/source/ai/sdlc-skill.git
-git branch -M main
-git push -uf origin main
+product-discovery   requirement-scoping   system-design
+dev-setup           implementation-handoff   qa-handoff
+release-handoff     ops-feedback          change-request
 ```
 
-## Integrate with your tools
+或者直接對 AI 說「我想開發一個新的小工具」。裝對的話，它**不會**直接開始寫程式，而是會先問你需求、或先去看你專案的 `docs/` 資料夾。
 
-- [ ] [Set up project integrations](https://gitlab-cloud.hitrustai.com/ec/3dsscloud/source/ai/sdlc-skill/-/settings/integrations)
+還是看不到？兩個最常見的原因：
 
-## Collaborate with your team
+1. **AI 工具開啟的資料夾不是你安裝的那個專案** —— 專案級安裝的 skill 只在該專案內可見
+2. 沒有完全重開（關掉分頁不算）
 
-- [ ] [Invite team members and collaborators](https://docs.gitlab.com/ee/user/project/members/)
-- [ ] [Create a new merge request](https://docs.gitlab.com/ee/user/project/merge_requests/creating_merge_requests.html)
-- [ ] [Automatically close issues from merge requests](https://docs.gitlab.com/ee/user/project/issues/managing_issues.html#closing-issues-automatically)
-- [ ] [Enable merge request approvals](https://docs.gitlab.com/ee/user/project/merge_requests/approvals/)
-- [ ] [Set auto-merge](https://docs.gitlab.com/ee/user/project/merge_requests/merge_when_pipeline_succeeds.html)
+## 有問題找誰
 
-## Test and Deploy
+這套流程是 Wayne 整理的，實測過 Claude 和 Codex 兩種環境都能正常運作。用起來有卡住的地方，直接問他。
 
-Use the built-in continuous integration in GitLab.
-
-- [ ] [Get started with GitLab CI/CD](https://docs.gitlab.com/ee/ci/quick_start/index.html)
-- [ ] [Analyze your code for known vulnerabilities with Static Application Security Testing(SAST)](https://docs.gitlab.com/ee/user/application_security/sast/)
-- [ ] [Deploy to Kubernetes, Amazon EC2, or Amazon ECS using Auto Deploy](https://docs.gitlab.com/ee/topics/autodevops/requirements.html)
-- [ ] [Use pull-based deployments for improved Kubernetes management](https://docs.gitlab.com/ee/user/clusters/agent/)
-- [ ] [Set up protected environments](https://docs.gitlab.com/ee/ci/environments/protected_environments.html)
-
-***
-
-# Editing this README
-
-When you're ready to make this README your own, just edit this file and use the handy template below (or feel free to structure it however you want - this is just a starting point!). Thank you to [makeareadme.com](https://www.makeareadme.com/) for this template.
-
-## Suggestions for a good README
-Every project is different, so consider which of these sections apply to yours. The sections used in the template are suggestions for most open source projects. Also keep in mind that while a README can be too long and detailed, too long is better than too short. If you think your README is too long, consider utilizing another form of documentation rather than cutting out information.
-
-## Name
-Choose a self-explaining name for your project.
-
-## Description
-Let people know what your project can do specifically. Provide context and add a link to any reference visitors might be unfamiliar with. A list of Features or a Background subsection can also be added here. If there are alternatives to your project, this is a good place to list differentiating factors.
-
-## Badges
-On some READMEs, you may see small images that convey metadata, such as whether or not all the tests are passing for the project. You can use Shields to add some to your README. Many services also have instructions for adding a badge.
-
-## Visuals
-Depending on what you are making, it can be a good idea to include screenshots or even a video (you'll frequently see GIFs rather than actual videos). Tools like ttygif can help, but check out Asciinema for a more sophisticated method.
-
-## Installation
-Within a particular ecosystem, there may be a common way of installing things, such as using Yarn, NuGet, or Homebrew. However, consider the possibility that whoever is reading your README is a novice and would like more guidance. Listing specific steps helps remove ambiguity and gets people to using your project as quickly as possible. If it only runs in a specific context like a particular programming language version or operating system or has dependencies that have to be installed manually, also add a Requirements subsection.
-
-## Usage
-Use examples liberally, and show the expected output if you can. It's helpful to have inline the smallest example of usage that you can demonstrate, while providing links to more sophisticated examples if they are too long to reasonably include in the README.
-
-## Support
-Tell people where they can go to for help. It can be any combination of an issue tracker, a chat room, an email address, etc.
-
-## Roadmap
-If you have ideas for releases in the future, it is a good idea to list them in the README.
-
-## Contributing
-State if you are open to contributions and what your requirements are for accepting them.
-
-For people who want to make changes to your project, it's helpful to have some documentation on how to get started. Perhaps there is a script that they should run or some environment variables that they need to set. Make these steps explicit. These instructions could also be useful to your future self.
-
-You can also document commands to lint the code or run tests. These steps help to ensure high code quality and reduce the likelihood that the changes inadvertently break something. Having instructions for running tests is especially helpful if it requires external setup, such as starting a Selenium server for testing in a browser.
-
-## Authors and acknowledgment
-Show your appreciation to those who have contributed to the project.
-
-## License
-For open source projects, say how it is licensed.
-
-## Project status
-If you have run out of energy or time for your project, put a note at the top of the README saying that development has slowed down or stopped completely. Someone may choose to fork your project or volunteer to step in as a maintainer or owner, allowing your project to keep going. You can also make an explicit request for maintainers.
+---
+_版本：2026-07-20（一鍵安裝版）。之後有更新會重發整包，重跑一次 `install.py` 即可——你專案 `docs/` 裡的產出物不受影響。_
