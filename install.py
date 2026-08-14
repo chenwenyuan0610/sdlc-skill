@@ -22,6 +22,7 @@ Standard library only. Works on macOS, Linux and Windows.
 """
 
 import os
+import re
 import shutil
 from datetime import datetime
 from pathlib import Path
@@ -40,6 +41,8 @@ for _stream in (sys.stdout, sys.stderr):
 PACK = Path(__file__).resolve().parent
 
 SKILLS = [
+    "converge",          # Step 0 第一列的出口；pipeline 外，但缺它整條入口斷掉
+    "debug",             # converge 的三處路由指向它；不裝＝那條路走到死巷
     "product-discovery",
     "requirement-scoping",
     "system-design",
@@ -49,7 +52,15 @@ SKILLS = [
     "release-handoff",
     "ops-feedback",
     "change-request",
+    "bug-fix",           # 修 bug 的骨架；不自成流程，是把人接回 change-request → Phase 5/6
+    "rule-eval",         # 驗規則本身有沒有效（改完規則後用），不是驗產品
 ]
+# converge 與 change-request 是 pipeline 外的旁路，沒有 phase-exit-criteria.md
+# （純討論不設 exit criteria／分診不產生 phase 產出物）。加新 skill 時若它也沒有
+# 那份檔，記得一併加進下方 NO_EXIT_CRITERIA，否則 missing_pack_files() 會誤報缺檔。
+NO_EXIT_CRITERIA = {
+    "converge", "debug", "change-request", "bug-fix", "rule-eval",
+}
 ORCHESTRATOR = "sdlc-orchestrator"
 AGENTS = ["sdlc-implementer.md", "sdlc-reviewer.md", "sdlc-verifier.md"]
 
@@ -287,23 +298,23 @@ def choose_storage_root(
     """Ask for one payload root, offering two standards and an exact path."""
     if kind not in ("skills", "agents"):
         raise ValueError("kind must be 'skills' or 'agents'")
-    other_platform = "codex" if entry_platform == "claude" else "claude"
     recommended = standard_storage_root(
         scope, entry_platform, kind, project_root)
-    alternative = standard_storage_root(
-        scope, other_platform, kind, project_root)
     names = {"claude": "Claude Code", "codex": "Codex"}
     labels = {"skills": ("skill", "skills"), "agents": ("角色檔", "agents")}
     label, directory_name = labels[kind]
     question = "skill 要放在哪裡？" if kind == "skills" else "角色檔要放在哪裡？"
 
+    # 只給「與步驟 2 所選規則檔相符」的標準位置，不再提供另一個平台的位置。
+    # 理由：步驟 2 已經決定了規則檔要寫進 CLAUDE.md（Claude Code）還是
+    # AGENTS.md（Codex）；此處若讓人選另一個平台的目錄，就會裝出
+    # 「規則檔在 A 平台、skill 與角色檔在 B 平台目錄」的組合——
+    # 該平台不會自動載入那個目錄，等於裝了卻不會被叫到。
     choice = ask_choice(
         question,
         [
-            ("{} 標準位置（建議，與所選規則檔相符）".format(
+            ("{} 標準位置（建議，與步驟 2 所選規則檔相符）".format(
                 names[entry_platform]), str(recommended[0])),
-            ("{} 標準位置".format(names[other_platform]),
-             str(alternative[0])),
             ("依個人習慣指定其他位置",
              "需輸入本次安裝範圍內的完整絕對路徑（不可使用相對路徑）"),
         ],
@@ -311,8 +322,6 @@ def choose_storage_root(
     )
     if choice == 1:
         return recommended[0], recommended[1], entry_platform
-    if choice == 2:
-        return alternative[0], alternative[1], other_platform
 
     boundary = (Path.home().resolve() if scope == "personal"
                 else normalized_project_root(project_root))
@@ -559,10 +568,23 @@ def missing_pack_files():
     required += [
         orchestrator / "DESIGN.md",
         orchestrator / "SDLC_主流程版_IAO.md",
+        orchestrator / "sdlc-entry.md",
+        orchestrator / "claude_sdlc.md",
+        # 全部 5 份 references 都是承重的：10 份 skill 的提問規則段 MUST 指向
+        # questioning-sufficiency；停止條件 MUST 指向 framework-defects；
+        # 四種工單的欄位與狀態機在 ticket-spec。缺任一份，照規則走會撞到死連結。
         orchestrator / "references" / "agent-teams.md",
         orchestrator / "references" / "severity-format.md",
+        orchestrator / "references" / "questioning-sufficiency.md",
+        orchestrator / "references" / "ticket-spec.md",
+        orchestrator / "references" / "framework-defects.md",
+        # tailoring 是入口文字第一句就指過去的（沒有它，「沒有宣告檔＝全跑」
+        # 這條預設沒有出處）；traceability 被需求分析、變更分析、開發、測試
+        # 四個地方引用，缺了它 REQ 表就沒有格式可循。
+        orchestrator / "references" / "tailoring.md",
+        orchestrator / "references" / "traceability.md",
     ]
-    phase_skills = [skill for skill in SKILLS if skill != "change-request"]
+    phase_skills = [skill for skill in SKILLS if skill not in NO_EXIT_CRITERIA]
     required += [
         PACK / "skills" / skill / "references" / "phase-exit-criteria.md"
         for skill in phase_skills
@@ -731,6 +753,46 @@ def dir_differs(src, dst):
     return False
 
 
+# 重裝時必須原地保留、不能被空白版覆蓋的「本機累積資料」。
+# 它們跟規則放在同一個目錄，但內容是使用者自己長出來的：
+# 框架缺陷登記簿記著「這套規則被改過哪些、為什麼」，重灌一次就沒了。
+LOCAL_RECORD_FILES = ("references/framework-defects.md",)
+
+
+def _has_local_records(path):
+    """檔案裡有沒有使用者自己 append 的登記列（表頭與說明不算）。"""
+    if not path.is_file():
+        return False
+    for line in path.read_text(encoding="utf-8", errors="replace").splitlines():
+        if re.match(r"\s*\|\s*(FD|ISSUE|BUG|FB|CR)-", line):
+            return True
+    return False
+
+
+def _carry_over_local_records(replaced, dst):
+    """把舊安裝裡有內容的本機紀錄檔，搬回新安裝的同一個位置。
+
+    沒有這一步，README 說的「重複執行是安全的，直接再跑一次就是更新」
+    對登記簿是假的——整個 sdlc-orchestrator/ 會被移進備份，
+    新的空白表就位，累積的紀錄從現行路徑消失。
+    """
+    if replaced is None:
+        return []
+    carried = []
+    for rel in LOCAL_RECORD_FILES:
+        old_file = Path(replaced) / rel
+        if _has_local_records(old_file):
+            carried.append((old_file, dst / rel))
+    return carried
+
+
+def _restore_local_records(carried):
+    for old_file, target in carried:
+        target.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(str(old_file), str(target))
+    return [str(t) for _, t in carried]
+
+
 def copy_tree(src, dst, attic):
     """Install src at dst, preserving anything already living there.
 
@@ -747,8 +809,11 @@ def copy_tree(src, dst, attic):
         replaced = unique_backup_name(attic / dst.name)
         shutil.move(str(dst), str(replaced))
     WROTE_ANYTHING = True
+    carried = _carry_over_local_records(replaced, dst)
     shutil.copytree(str(src), str(dst),
                     ignore=shutil.ignore_patterns(".DS_Store", "__pycache__", "*.pyc"))
+    for restored in _restore_local_records(carried):
+        print(dim("      已保留既有紀錄 → {}".format(restored)))
     return replaced
 
 
@@ -759,7 +824,8 @@ def copy_tree(src, dst, attic):
 def main():
     global WROTE_ANYTHING
     print(bold("\n  SDLC 開發流程包 — 安裝程式"))
-    print(dim("  9 個流程 skill + 3 個角色定義 + 流程入口"))
+    print(dim("  {} 個流程 skill + {} 個角色定義 + 流程入口".format(
+        len(SKILLS), len(AGENTS))))
 
     missing = missing_pack_files()
     if missing:
@@ -900,7 +966,7 @@ def main():
 
     heading("確認裝好了")
     print("  1. 完全關閉並重新開啟 Claude Code / Codex")
-    print("  2. 輸入 " + bold("/") + " 應該能看到這 9 個 skill：")
+    print("  2. 輸入 " + bold("/") + " 應該能看到這 {} 個 skill：".format(len(SKILLS)))
     print(dim("     " + "、".join(SKILLS)))
     print("  3. 或直接說「我想開發一個新功能」，它應該先去看 docs/ 資料夾，")
     print(dim("     而不是直接開始寫程式。"))

@@ -1,25 +1,30 @@
 # Agent Teams — SDLC 派工分級（領域中立）
 
-用途：`implementation-handoff`/`qa-handoff`/`system-design` 決定「這件事該 Lead 自己做、派一個 agent、還是派一組平行 agent」時查這份文件。角色定義檔在 Entry Protocol 指定的 `<agents-root>/sdlc-*.md`，不假設它與 `<skill-root>` 同層。
+用途：`implementation-handoff`/`qa-handoff`/`system-design` 決定「這件事該 Lead 自己做、派一個 agent、還是派一組平行 agent」時查這份文件。角色定義檔 `sdlc-implementer.md`／`sdlc-reviewer.md`／`sdlc-verifier.md`，安裝在你選定的**角色檔目錄**下（不綁定任何特定技術棧）。
 
 ## 角色檔對應
 
 | 角色檔 | 用途 | 唯讀 |
 |--------|------|------|
-| `<agents-root>/sdlc-implementer.md` | 實作票（`implementation-handoff` 用） | 否，會寫檔 |
-| `<agents-root>/sdlc-reviewer.md` | 建設性審查：功能正確性/設計品質（`qa-handoff` 用） | 是 |
-| `<agents-root>/sdlc-verifier.md` | 對抗性驗證：安全性 or 證據查核，依 target 參數（`qa-handoff` 用） | 是 |
+| `sdlc-implementer.md` | 實作票（`implementation-handoff` 用） | 否，會寫檔（`Read/Edit/Write/Glob/Grep/Bash`）|
+| `sdlc-reviewer.md` | 建設性審查：功能正確性/設計品質（`qa-handoff` 用） | **是，工具層真的擋住**（只有 `Read/Glob/Grep`）|
+| `sdlc-verifier.md` | 對抗性驗證：安全性 or 證據查核，依 target 參數（`qa-handoff` 用） | **否——它有 `Bash`**（`target=evidence` 要重跑指令）。⚠ **不得在自動核准權限模式下派它**；唯讀是靠角色檔的自我約束，不是工具層限制 |
 
-**派工方式分兩種環境**：角色檔選在 Claude Code 會自動發現的標準 `agents/` 目錄時，直接用註冊後的 `sdlc-*` agent 型別派工（frontmatter 的唯讀 tools 限制才會真正生效）；Codex 標準位置、自訂位置，或其他無自訂 agent 型別的環境則用 embed——從 Entry Protocol 的 `<agents-root>` 讀取 `sdlc-<角色>.md`，把完整角色定義放進 generic worker/explorer 的 prompt。兩種方式都不要即興重寫角色設定。
+**派工方式分兩種環境**：Claude Code 會把角色檔目錄下的 `sdlc-*.md` 自動註冊成可派的 agent 型別——直接用該型別派工（frontmatter 的唯讀 tools 限制才會真正生效）；無自訂 agent 型別的環境（如 Codex）才用 embed——把角色檔內容讀進 generic worker/explorer 的 prompt，並註明「讀角色檔目錄下的 `sdlc-<角色>.md` 取得完整角色定義」。兩種方式都不要即興重寫角色設定。
 
 ## Tier 分級
 
-| Tier | 判斷標準 | 誰做 |
-|------|---------|------|
-| 0 Lead-direct | 單一改動 ≤20 行、單檔、無新依賴、無新對外介面 | Lead 直接做，不用派工、不用額外審查 |
-| 1 單一 agent | 單一票，範圍明確，不涉及安全/共用資料/新架構決策 | 派 1 個 `sdlc-implementer`，Lead 覆核輸出 |
-| 2 平行多 agent | 多張獨立票、或單票跨多個檔案/模組 | 每張獨立票各派 1 個 `sdlc-implementer`，平行執行；完工後派 1 個 `sdlc-reviewer` 或 `sdlc-verifier`（依風險挑最相關角度）|
-| 3 高風險全套 | 涉及安全/認證/共用資料寫入/跨模組架構變更/外部整合 | 平行實作 + `sdlc-reviewer` + `sdlc-verifier`(target=security) + `sdlc-verifier`(target=evidence) 三者都派，任一 NEEDS WORK 就不算過 |
+⚠ **只有當使用環境的綁定層明文指定「SDLC pipeline 用哪張 Tier 表」時才改用它**，否則一律用本表。**兩套判準並存會讓同一個變更得到不同 Tier，而多個 MUST 關卡靠 Tier 判定**——所以只能有一個生效。
+⚠ **使用環境為別條路線（例如自己的功能開發流程）定義的 Tier 表，不自動套用到 SDLC**——那類表往往綁著該路線自己的審查編制，套過來會派出 SDLC 明文禁派的角色。判斷方式：那張表指名的是誰？指名 SDLC 角色才適用，指名別條路線的角色就不是。
+
+| Tier | 判斷標準 | 誰實作 | 完工覆核（**沒有「免審」這一格**）|
+|------|---------|------|------|
+| 0 Lead-direct | 單一改動 ≤20 行、單檔、無新依賴、無新對外介面 | Lead 直接做，**不用派工** | **1 個 `sdlc-reviewer`**（唯讀）|
+| 1 單一 agent | 單一票，範圍明確，不涉及安全/共用資料/新架構決策 | 派 1 個 `sdlc-implementer` | **1 個 `sdlc-reviewer`**（唯讀）|
+| 2 平行多 agent | 多張獨立票、或單票跨多個檔案/模組 | 每張獨立票各派 1 個 `sdlc-implementer`，平行執行 | 1 個 `sdlc-reviewer` ＋ 依風險加 1 個 `sdlc-verifier`（挑最相關角度）|
+| 3 高風險全套 | 涉及安全/認證/共用資料寫入/跨模組架構變更/外部整合 | 平行實作 | `sdlc-reviewer` ＋ `sdlc-verifier`(target=security) ＋ `sdlc-verifier`(target=evidence) 三者都派，任一 NEEDS WORK 就不算過 |
+
+**覆核 MUST 由實作者以外的角色做，所有 Tier 一體適用。** 環境有 agent 機制就派唯讀 agent；沒有就由另一個人看。⚠ **「Lead 覆核輸出」不算獨立覆核**——Lead 是派工、定範圍、決定怎麼做的人，讓他驗自己派的活，等於實作者自己勾自己的驗收項。**改動小不是免審的理由**：越小的改動越容易夾帶沒人注意的副作用，而它剛好也是最便宜的審查。
 
 **判斷時機**：進 `implementation-handoff` 拆票、進 `qa-handoff` 排審查、進 `system-design` 派多面向設計時，都用這張表決定規模，不要憑感覺判斷。`system-design` 派多面向時用 `general-purpose`（設計不是實作，不套用 `sdlc-implementer`），角色紀律見 `system-design/SKILL.md` 本體的 Core rule。
 
@@ -47,8 +52,9 @@
 1. **功能正確性**（`sdlc-reviewer`）：邏輯有沒有做對，符不符合驗收標準
 2. **安全性**（`sdlc-verifier`, target=security）：有沒有引入常見弱點（injection、權限繞過、敏感資料外洩）
 3. **證據驗證**（`sdlc-verifier`, target=evidence）：宣稱「測試過了」「跑過了」的地方，有沒有實際 command output 佐證，不接受口頭宣稱
+4. **最小改動**（**所有 Tier 一體適用；演進模式 MUST 逐項查**）：這次的 diff 有沒有超出票的範圍——順手重構了無關的程式碼、改了別的模組、調整了沒人要求的格式或 import 順序、動到與本票無關的設定或依賴版本。**判準是「這一行如果拿掉，本票的驗收條件會不會不過」**，答案是「不會」就該拿掉。既有專案的每一行多餘改動都是別人要回歸測試的成本，**「順便修一下」是既有系統最常見的災難來源**；真的該修就另開一張票，不要夾帶。
 
-Tier 3 三個角色都要派；Tier 2 至少派 1 個，依風險挑最相關的。
+Tier 3 前三個角色都要派；Tier 2 至少派 1 個，依風險挑最相關的；**第 4 項不分 Tier，由該票的覆核者一併看**（它查的是 diff 範圍，不需要額外派人）。
 
 ## 卡住時的處理（retry 而非重派）
 

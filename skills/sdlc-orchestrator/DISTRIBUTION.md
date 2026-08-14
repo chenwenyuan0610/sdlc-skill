@@ -11,7 +11,7 @@
 |------|------|-----------------|
 | 9 個 phase/分診 skill 目錄（`product-discovery`、`requirement-scoping`、`system-design`、`dev-setup`、`implementation-handoff`、`qa-handoff`、`release-handoff`、`ops-feedback`、`change-request`，含各自 `references/`） | 9 | `<你的專案>/.claude/skills/` |
 | 角色檔 `sdlc-implementer.md` / `sdlc-reviewer.md` / `sdlc-verifier.md` | 3 | `<你的專案>/.claude/agents/` |
-| 共用參照 `sdlc-orchestrator/references/agent-teams.md` + `references/severity-format.md` | 2 | `<你的專案>/.claude/skills/sdlc-orchestrator/references/`（保持這個路徑，skill 內引用寫的是它） |
+| 共用參照 `sdlc-orchestrator/references/` 下的 `agent-teams.md`、`severity-format.md`、`ticket-spec.md`、`framework-defects.md` | 4 | `<你的專案>/.claude/skills/sdlc-orchestrator/references/`（保持這個路徑，skill 內引用寫的是它） |
 | 流程源頭文件 `SDLC_主流程版_IAO.md`（8 階段 35 步驟原文，各 skill 檔頭都引用它） | 1 | `<你的專案>/.claude/skills/sdlc-orchestrator/` |
 | Entry Protocol 文字段（見 `DESIGN.md`「Entry Protocol」區塊） | 1 | 貼進你自己的 `CLAUDE.md` 或 `AGENTS.md`（見下） |
 
@@ -53,6 +53,8 @@ done
 mkdir -p $OUT/skills/sdlc-orchestrator/references
 cp $SRC/skills/sdlc-orchestrator/references/agent-teams.md \
    $SRC/skills/sdlc-orchestrator/references/severity-format.md \
+   $SRC/skills/sdlc-orchestrator/references/ticket-spec.md \
+   $SRC/skills/sdlc-orchestrator/references/framework-defects.md \
    $OUT/skills/sdlc-orchestrator/references/
 cp $SRC/agents/sdlc-implementer.md $SRC/agents/sdlc-reviewer.md $SRC/agents/sdlc-verifier.md $OUT/agents/
 cp $SRC/skills/sdlc-orchestrator/DESIGN.md $SRC/skills/sdlc-orchestrator/DISTRIBUTION.md \

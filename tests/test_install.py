@@ -1,4 +1,5 @@
 import io
+import re
 import os
 import tempfile
 import unittest
@@ -7,6 +8,19 @@ from pathlib import Path
 from unittest import mock
 
 import install
+
+
+def _phase_skill():
+    """第一個真的有 phase-exit-criteria.md 的 skill。
+
+    直接寫 SKILLS[0] 會被清單順序綁死——converge 排進第一個之後，
+    刪它的 phase-exit-criteria.md 不會觸發任何錯誤（它本來就沒有那份檔），
+    那個 case 就變成永遠不會失敗的假測試。
+    """
+    for skill in install.SKILLS:
+        if skill not in install.NO_EXIT_CRITERIA:
+            return skill
+    raise AssertionError("SKILLS 裡沒有任何帶 phase-exit-criteria 的 skill")
 
 
 class InstallLocationTests(unittest.TestCase):
@@ -44,7 +58,7 @@ class InstallLocationTests(unittest.TestCase):
             skill_dir = pack / "skills" / skill
             skill_dir.mkdir(parents=True)
             (skill_dir / "SKILL.md").write_text("# Skill\n", encoding="utf-8")
-            if skill != "change-request":
+            if skill not in install.NO_EXIT_CRITERIA:
                 reference_dir = skill_dir / "references"
                 reference_dir.mkdir()
                 (reference_dir / "phase-exit-criteria.md").write_text(
@@ -63,6 +77,20 @@ class InstallLocationTests(unittest.TestCase):
             "# Agent teams\n", encoding="utf-8")
         (shared_references / "severity-format.md").write_text(
             "# Severity\n", encoding="utf-8")
+        (shared_references / "questioning-sufficiency.md").write_text(
+            "# Questioning sufficiency\n", encoding="utf-8")
+        (shared_references / "ticket-spec.md").write_text(
+            "# Ticket spec\n", encoding="utf-8")
+        (shared_references / "framework-defects.md").write_text(
+            "# Framework defects\n", encoding="utf-8")
+        (shared_references / "tailoring.md").write_text(
+            "# Tailoring\n", encoding="utf-8")
+        (shared_references / "traceability.md").write_text(
+            "# Traceability\n", encoding="utf-8")
+        (orchestrator / "sdlc-entry.md").write_text(
+            "# Step 0\n", encoding="utf-8")
+        (orchestrator / "claude_sdlc.md").write_text(
+            "# Paste-in entry table\n", encoding="utf-8")
         agents = pack / "agents"
         agents.mkdir()
         for agent in install.AGENTS:
@@ -151,18 +179,18 @@ class InstallLocationTests(unittest.TestCase):
                 self.assertIn(str(expected), options[0][1])
                 self.assertEqual(expected, locations[0])
 
-    def test_storage_custom_path_is_asked_only_for_choice_three(self):
+    def test_storage_custom_path_is_asked_only_for_the_custom_choice(self):
         with tempfile.TemporaryDirectory() as temp_dir:
             project = Path(temp_dir)
             custom = project / "my-skills"
-            for choice in (1, 2):
-                with self.subTest(choice=choice), \
-                        mock.patch.object(install, "ask_choice", return_value=choice), \
-                        mock.patch.object(install, "ask_path") as ask_path:
-                    install.choose_storage_root(
-                        "skills", "project", "claude", project)
-                    ask_path.assert_not_called()
-            with mock.patch.object(install, "ask_choice", return_value=3), \
+            # 選項 1 = 與步驟 2 相符的標準位置 → 不該問路徑
+            with mock.patch.object(install, "ask_choice", return_value=1), \
+                    mock.patch.object(install, "ask_path") as ask_path:
+                install.choose_storage_root(
+                    "skills", "project", "claude", project)
+                ask_path.assert_not_called()
+            # 選項 2 = 自訂絕對路徑 → 才問（跨平台那個選項已移除）
+            with mock.patch.object(install, "ask_choice", return_value=2), \
                     mock.patch.object(install, "ask_path", return_value=custom) as ask_path:
                 selected, boundary, source = install.choose_storage_root(
                     "skills", "project", "claude", project)
@@ -349,7 +377,39 @@ class InstallLocationTests(unittest.TestCase):
             self.assertFalse((project / ".claude").exists())
             self.assertIn("Codex 標準位置（建議", output)
 
-    def test_main_project_agents_can_override_to_claude_storage(self):
+    def test_storage_choices_never_offer_the_other_platform(self):
+        """步驟 2 選了哪個平台，步驟 3 就只給那個平台的標準位置。
+
+        舊行為讓人可以把規則檔寫進 AGENTS.md（Codex）、卻把 skill 裝到
+        .claude/skills（Claude Code 的位置）。該平台不會自動載入另一個平台的
+        目錄，等於裝了卻不會被叫到；而規則裡若有任何路徑引用，也會指向
+        不存在的地方。這個組合已移除，本測試確保它不會被加回來。
+        """
+        project = Path("/tmp/does-not-need-to-exist")
+        for entry_platform, forbidden in (("claude", ".agents"),
+                                          ("codex", ".claude")):
+            for kind in ("skills", "agents"):
+                with self.subTest(platform=entry_platform, kind=kind):
+                    captured = []
+                    with mock.patch.object(
+                            install, "ask_choice",
+                            side_effect=lambda q, opts, default=1: (
+                                captured.append(opts) or 1)):
+                        install.choose_storage_root(
+                            kind, "project", entry_platform, project)
+                    rendered = " ".join(
+                        "{} {}".format(label, detail)
+                        for label, detail in captured[0])
+                    self.assertNotIn(
+                        forbidden + "/" + kind, rendered,
+                        "步驟 2 選 {} 之後，步驟 3 不該再出現 {} 的標準位置："
+                        "{}".format(entry_platform, forbidden, rendered))
+                    self.assertEqual(
+                        2, len(captured[0]),
+                        "只該有『相符的標準位置』與『自訂路徑』兩個選項，"
+                        "實際 {} 個".format(len(captured[0])))
+
+    def test_main_same_platform_roots_are_both_used(self):
         with tempfile.TemporaryDirectory() as temp_dir:
             sandbox = Path(temp_dir)
             fake_home = sandbox / "home"
@@ -357,28 +417,9 @@ class InstallLocationTests(unittest.TestCase):
             fake_home.mkdir()
             project.mkdir()
             result, _ = self.run_main(
-                ("2", str(project), "2", "2", "2"), fake_home)
+                ("2", str(project), "2", "1", "1"), fake_home)
 
-            self.assertEqual(0, result)
-            skills_root = project / ".claude" / "skills"
-            self.assertTrue((skills_root / "qa-handoff" / "SKILL.md").is_file())
-            self.assertFalse((project / ".agents").exists())
-            self.assertIn(
-                str(skills_root),
-                (project / "AGENTS.md").read_text(encoding="utf-8"),
-            )
-
-    def test_main_can_mix_skill_and_agent_standard_roots(self):
-        with tempfile.TemporaryDirectory() as temp_dir:
-            sandbox = Path(temp_dir)
-            fake_home = sandbox / "home"
-            project = sandbox / "project"
-            fake_home.mkdir()
-            project.mkdir()
-            result, _ = self.run_main(
-                ("2", str(project), "2", "2", ""), fake_home)
-
-            skills_root = project / ".claude" / "skills"
+            skills_root = project / ".agents" / "skills"
             agents_root = project / ".agents" / "agents"
             entry_text = (project / "AGENTS.md").read_text(encoding="utf-8")
             self.assertEqual(0, result)
@@ -398,7 +439,7 @@ class InstallLocationTests(unittest.TestCase):
             fake_home.mkdir()
             project.mkdir()
             result, _ = self.run_main(
-                ("2", str(project), "2", "3", str(custom_skills), "yes", ""),
+                ("2", str(project), "2", "2", str(custom_skills), "yes", ""),
                 fake_home)
 
             self.assertEqual(0, result)
@@ -418,8 +459,8 @@ class InstallLocationTests(unittest.TestCase):
             project.mkdir()
             result, _ = self.run_main(
                 ("2", str(project), "2",
-                 "3", str(custom_skills), "yes",
-                 "3", str(custom_agents), "yes"),
+                 "2", str(custom_skills), "yes",
+                 "2", str(custom_agents), "yes"),
                 fake_home)
 
             self.assertEqual(0, result)
@@ -439,7 +480,7 @@ class InstallLocationTests(unittest.TestCase):
             custom_skills = fake_home / "my-sdlc" / "skills"
             fake_home.mkdir()
             result, _ = self.run_main(
-                ("", "", "3", str(custom_skills), "yes", ""),
+                ("", "", "2", str(custom_skills), "yes", ""),
                 fake_home)
 
             self.assertEqual(0, result)
@@ -622,8 +663,24 @@ class InstallLocationTests(unittest.TestCase):
                                 "references" / "agent-teams.md"),
                 "severity": (Path("skills") / install.ORCHESTRATOR /
                              "references" / "severity-format.md"),
-                "phase-exit": (Path("skills") / install.SKILLS[0] /
+                "phase-exit": (Path("skills") / _phase_skill() /
                                "references" / "phase-exit-criteria.md"),
+                "questioning": (Path("skills") / install.ORCHESTRATOR /
+                                "references" / "questioning-sufficiency.md"),
+                "ticket-spec": (Path("skills") / install.ORCHESTRATOR /
+                                "references" / "ticket-spec.md"),
+                "framework-defects": (Path("skills") / install.ORCHESTRATOR /
+                                      "references" / "framework-defects.md"),
+                # 入口文字第一句就指向 tailoring；缺它，「沒有宣告檔＝全跑」
+                # 這條預設沒有出處。traceability 被四個地方引用。
+                "tailoring": (Path("skills") / install.ORCHESTRATOR /
+                              "references" / "tailoring.md"),
+                "traceability": (Path("skills") / install.ORCHESTRATOR /
+                                 "references" / "traceability.md"),
+                "sdlc-entry": (Path("skills") / install.ORCHESTRATOR /
+                               "sdlc-entry.md"),
+                "claude-sdlc": (Path("skills") / install.ORCHESTRATOR /
+                                "claude_sdlc.md"),
             }
             for case, relative in cases.items():
                 with self.subTest(case=case):
@@ -697,3 +754,220 @@ class InstallLocationTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class EntryProtocolReadabilityTests(unittest.TestCase):
+    """鎖住兩個實際發生過的可讀性回歸（都是模板作者看不見、裝出來才看得見的）。
+
+    1. 佔位符寫在每一條規則上 → 替換後同一串絕對路徑重複十次，人讀不下去。
+    2. 每行硬斷在 35-60 個中文字 → 句子被切成兩三截，讀的人要自己拼回去。
+
+    這兩件事在本機檔案上完全看不出來，因為本機版沒有佔位符、也沒有被替換。
+    只有把安裝結果打開才看得見——所以改成機械檢查，不靠人每次幫忙看。
+    """
+
+    def entry_block(self):
+        block = install.extract_entry_protocol()
+        self.assertIsNotNone(block, "規則包的 DESIGN.md 抽不出 Entry Protocol 區塊")
+        return block
+
+    def test_placeholders_declared_once_not_per_rule(self):
+        block = self.entry_block()
+        for marker in ("{{SKILLS_ROOT}}", "{{AGENTS_ROOT}}"):
+            count = block.count(marker)
+            self.assertEqual(
+                count, 1,
+                "{} 出現 {} 次；MUST 只在開頭宣告一次，"
+                "否則替換後會變成同一串絕對路徑重複 N 遍".format(marker, count))
+
+    def test_rules_are_not_hard_wrapped_mid_sentence(self):
+        block = self.entry_block()
+        offenders = [
+            (i + 1, line) for i, line in enumerate(block.split("\n"))
+            if line.rstrip().endswith(("，", "、", "／", "；"))
+        ]
+        self.assertEqual(
+            offenders, [],
+            "以下行結尾是句中連接符，代表句子被硬斷成多行——"
+            "一條規則寫一行，讓編輯器自己 soft-wrap：{}".format(offenders))
+
+    def test_every_installed_skill_is_reachable_from_the_entry_block(self):
+        """每個被安裝的 skill，MUST 從入口文字**走得到**（可經由別的 skill 轉介）。
+
+        直接比對「入口文字有沒有提到」是錯的斷言：debug 是 converge 的下游，
+        Step 0 本來就不該直接指向它。要驗的是**傳遞可達性**——從入口文字出發，
+        沿著 skill 之間的互相引用走，能不能走到每一個裝上去的 skill。
+        裝了卻沒有任何路徑走得到，等於白裝。
+        """
+        pack_skills = Path(__file__).resolve().parent.parent / "skills"
+        names = set(install.SKILLS)
+        reached = {n for n in names if n in self.entry_block()}
+        frontier = list(reached)
+        while frontier:
+            current = frontier.pop()
+            skill_md = pack_skills / current / "SKILL.md"
+            if not skill_md.is_file():
+                continue
+            text = skill_md.read_text(encoding="utf-8")
+            for name in names - reached:
+                if name in text:
+                    reached.add(name)
+                    frontier.append(name)
+        unreachable = sorted(names - reached)
+        self.assertEqual(
+            unreachable, [],
+            "從入口文字出發、沿 skill 互相引用走，走不到這些已安裝的 skill——"
+            "裝了也沒有任何路徑會叫到它們：{}".format(unreachable))
+
+
+class RoutingClosureTests(unittest.TestCase):
+    """規則指向的 skill，MUST 全部裝得到。
+
+    這條不是從既有寫法反推的斷言——它從**規則文字**掃出「被路由指向的
+    skill 名稱」，再跟 install.py 的 SKILLS 對帳。規則新增一條指向、
+    或有人把某個 skill 從 SKILLS 拿掉，兩邊任一動都會被抓到。
+
+    實際發生過：converge 的三處路由指向 debug，而 debug 不在 SKILLS 裡，
+    收件方收斂完被叫去 /debug，那個 skill 從來沒被安裝。
+    """
+
+    PACK = Path(__file__).resolve().parent.parent
+
+    def routed_skill_names(self):
+        """掃所有 SKILL.md，抓出被當成路由目的地提到的 skill 名稱。"""
+        installable = set(install.SKILLS) | {install.ORCHESTRATOR}
+        on_disk = {d.name for d in (self.PACK / "skills").iterdir() if d.is_dir()}
+        # 只認「包裡真的有這個目錄」的名字，避免把使用環境自己的 skill
+        # （feature/fix/java-dev…）誤判成本包該負責安裝的東西
+        candidates = on_disk | installable
+        pattern = re.compile(r"`(" + "|".join(sorted(map(re.escape, candidates))) + r")`")
+        routed = set()
+        for path in (self.PACK / "skills").rglob("SKILL.md"):
+            text = path.read_text(encoding="utf-8")
+            for name in pattern.findall(text):
+                if name != path.parent.name:      # 不算自我引用
+                    routed.add(name)
+        return routed
+
+    def test_every_routed_skill_is_installed(self):
+        routed = self.routed_skill_names()
+        missing = sorted(n for n in routed
+                         if n not in set(install.SKILLS) | {install.ORCHESTRATOR})
+        self.assertEqual(
+            missing, [],
+            "這些 skill 被規則指向、包裡也有，但 install.py 不會安裝它們——"
+            "收件方照規則走會走進死巷：{}".format(missing))
+
+    def test_every_shipped_skill_directory_is_installed(self):
+        on_disk = {d.name for d in (self.PACK / "skills").iterdir() if d.is_dir()}
+        installable = set(install.SKILLS) | {install.ORCHESTRATOR}
+        orphans = sorted(on_disk - installable)
+        self.assertEqual(
+            orphans, [],
+            "這些目錄在包裡但永遠不會被安裝（要嘛加進 SKILLS，要嘛從包裡移除，"
+            "留著只會讓手動安裝的人裝到不該裝的東西）：{}".format(orphans))
+
+
+class EntryProtocolRoutingTests(unittest.TestCase):
+    """入口文字的路由必須讓進度往前走，不能把人吸回已完成的階段。
+
+    入口文字自己寫「第一條命中就採用，不再往下看」。在那個規則下，
+    條件的**順序**就是語意的一部分：如果某個一直都成立的條件
+    （例如「有 docs/dev-setup.md」——做完 Phase 4 之後永遠為真）
+    排在後面階段的前面，那後面的階段永遠走不到。
+
+    實際發生過：implementation-handoff 排在 qa-handoff 之前、條件是
+    「有 docs/dev-setup.md」，於是每次寫完程式回來重判都被送回去重寫，
+    測試／部署／維運三個階段在字面上不可達。
+    """
+
+    PHASE_ORDER = [
+        "ops-feedback",          # Phase 8，最後面的階段要最先比對
+        "release-handoff",       # 7
+        "qa-handoff",            # 6
+        "implementation-handoff",# 5
+        "system-design",         # 3
+        "requirement-scoping",   # 2
+    ]
+
+    def entry_lines(self):
+        block = install.extract_entry_protocol()
+        self.assertIsNotNone(block, "抽不出 Entry Protocol 區塊")
+        return [l for l in block.split("\n") if l.lstrip().startswith("- ")]
+
+    def first_index(self, lines, name):
+        for i, l in enumerate(lines):
+            if name in l:
+                return i
+        self.fail("入口文字沒有任何一條規則指向 {}".format(name))
+
+    def test_later_phases_are_matched_before_earlier_ones(self):
+        lines = self.entry_lines()
+        idx = [(n, self.first_index(lines, n)) for n in self.PHASE_ORDER]
+        for (a, ia), (b, ib) in zip(idx, idx[1:]):
+            self.assertLess(
+                ia, ib,
+                "{} 必須排在 {} 之前。入口文字是 first-hit-wins，"
+                "把早期階段排前面會讓晚期階段永遠走不到：實際順序 {}".format(
+                    a, b, [n for n, _ in sorted(idx, key=lambda t: t[1])]))
+
+    def test_phase_five_entry_is_guarded_by_completion_state(self):
+        """進 Phase 5 的條件必須帶「這個階段還沒做完」的守衛。
+
+        沒有守衛的話，「有 docs/dev-setup.md」在整個專案生命週期都成立，
+        每次回來重判都會再次命中。
+        """
+        lines = self.entry_lines()
+        line = lines[self.first_index(lines, "implementation-handoff")]
+        self.assertIn(
+            "Phase 5", line,
+            "進 implementation-handoff 的那一條必須引用 handoff-log 的 "
+            "「## Phase 5」狀態當守衛，否則它會恆為真：{}".format(line))
+
+    def test_in_progress_scan_comes_before_all_phase_rules(self):
+        """「有分節標『進行中』就續作那一節」必須排在所有階段規則之前。"""
+        lines = self.entry_lines()
+        in_progress = self.first_index(lines, "狀態：進行中")
+        earliest_phase = min(self.first_index(lines, n) for n in self.PHASE_ORDER)
+        self.assertLess(
+            in_progress, earliest_phase,
+            "『狀態：進行中』的掃描必須最先做，否則做到一半的階段會被"
+            "其他條件搶先命中而被跳過")
+
+
+class ReinstallPreservesLocalRecordsTests(unittest.TestCase):
+    """重裝不得抹掉使用者累積的框架缺陷登記。
+
+    README 說「重複執行是安全的，之後有新版直接再跑一次就是更新」。
+    但 copy_tree 是「整個目錄搬進備份再複製新的」，而登記簿跟規則放在
+    同一個目錄底下——不特別保留的話，累積的紀錄會離開現行路徑，
+    新的空白表就位，而使用者以為只是更新了規則。
+    """
+
+    def test_framework_defect_rows_survive_a_second_install(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            sandbox = Path(temp_dir)
+            fake_home = sandbox / "home"
+            project = sandbox / "project"
+            fake_home.mkdir(); project.mkdir()
+
+            helper = InstallLocationTests("run_main")
+            code, _ = helper.run_main(("2", str(project), "", "", ""), fake_home)
+            self.assertEqual(0, code)
+
+            registry = (project / ".claude" / "skills" / "sdlc-orchestrator"
+                        / "references" / "framework-defects.md")
+            self.assertTrue(registry.is_file(), "第一次安裝沒有帶出登記簿")
+            marker = "| FD-01 | 我的紀錄 | x | y:1 | 矛盾 | 全部 | proposed |"
+            registry.write_text(
+                registry.read_text(encoding="utf-8") + "\n" + marker + "\n",
+                encoding="utf-8")
+
+            # 第二次安裝時 CLAUDE.md 已有入口區塊，會多問一次「要更新嗎」
+            code, output = helper.run_main(
+                ("2", str(project), "", "", "", ""), fake_home)
+            self.assertEqual(0, code)
+            self.assertIn(
+                marker, registry.read_text(encoding="utf-8"),
+                "重裝之後使用者 append 的登記列不見了——那是他為什麼改規則的"
+                "唯一紀錄，比規則本身更難重建")

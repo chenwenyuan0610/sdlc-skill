@@ -14,7 +14,8 @@
 ## 步驟 35 修正與優化
 - 每條問題已明確決定路徑：小修正 → Lead-direct 修正；影響既有規格但非全新方向 → `change-request`；全新方向 → 回 `product-discovery`
 - 沒有「先放著」的問題沒被分類就結案
-- 每條處理結果已回寫 `docs/feedback-log.md` 對應條目的狀態欄（`resolved` / `routed-to-<去處>`）
+- 每條處理結果已回寫 `docs/feedback-log.md` 對應條目的狀態欄，**值一律用 `../../sdlc-orchestrator/references/ticket-spec.md` 的狀態機**：自己修掉＝**先留 `in-progress`**，由非修正者覆核後才由覆核者改 `fixed`（註明改了什麼）／分流出去＝**仍是 `in-progress`** ＋備註 `routed-to-<去處>` 與承接單號／決定不做＝`rejected`（寫為什麼）。⚠ **分流不是結案**——標成終態會讓這條回饋從追蹤清單消失，承接方那邊掛掉時沒人會發現。**`resolved`／`routed-to-` 不是合法狀態值**，本檔先前用它們，已改。
+- **`fixed` 與 `rejected` 不得由修正者自己標**（`ticket-spec.md` 硬規則 5：結案權與執行權分離；硬規則 2：`rejected` 必須由人決定）。Lead-direct 修完後留 `in-progress`，由**非修正者**確認才改 `fixed`
 
 ## 與既有機制的關係
 本階段是新內容，不涉及分工問題。

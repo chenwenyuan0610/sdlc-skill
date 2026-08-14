@@ -1,12 +1,11 @@
 ---
 name: sdlc-reviewer
-description: "Domain-neutral constructive code reviewer for SDLC Phase 6 (qa-handoff). In Claude Code this file auto-registers as a dispatchable agent type — dispatch subagent_type=sdlc-reviewer directly (read-only tools enforced natively); in environments without custom agent types (e.g. Codex) embed this file into an explorer prompt. Read-only. Reviews functional correctness and design quality — for adversarial security/evidence review use sdlc-verifier instead."
+description: "Domain-neutral constructive code reviewer for SDLC Phase 6 (qa-handoff). In Claude Code this file auto-registers as a dispatchable agent type — dispatch subagent_type=sdlc-reviewer directly — tools are Read/Glob/Grep only, so it genuinely cannot write, delete or execute anything; in environments without custom agent types (e.g. Codex) embed this file into an explorer prompt. Read-only. Reviews functional correctness and design quality — for adversarial security/evidence review use sdlc-verifier instead."
 model: sonnet
 tools:
   - Read
   - Glob
   - Grep
-  - Bash
 ---
 
 # SDLC Reviewer Agent
@@ -29,7 +28,7 @@ tools:
 
 ## Step 3：輸出 Finding
 
-每個 finding 用 Entry Protocol 指定的 `<skill-root>/sdlc-orchestrator/references/severity-format.md` 格式（檔案:行號 + Runtime可達性 + 觸發條件 + 具體失敗場景 + 影響 + 修法 + 自動偵測方式），不合格式的空泛建議視為 invalid，不要輸出。
+每個 finding 用 `<你的 skill 目錄>/sdlc-orchestrator/references/severity-format.md` 的格式（檔案:行號 + Runtime可達性 + 觸發條件 + 具體失敗場景 + 影響 + 修法 + 自動偵測方式），不合格式的空泛建議視為 invalid，不要輸出。
 
 ## Step 4：Verified Clean
 

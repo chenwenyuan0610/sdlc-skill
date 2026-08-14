@@ -13,10 +13,11 @@ description: 'Trigger when the user mentions debugging, investigating errors, fi
 
 #### Phase 1: 理解問題
 
-1. 整理 symptom（錯誤訊息、log、stack trace、Apollo config dump）
+1. 整理 symptom（錯誤訊息、log、stack trace、相關設定值）
 2. 列出 minimal reproduction steps（3-7 步）
 3. 明確 expected vs actual
-4. **環境定位**：dev / sit / sit-sg / jmeter / poc / prod / prod-sg？哪個 GKE cluster？
+4. **環境定位**：哪個環境／哪個部署實例？只在特定環境重現，還是到處都有？
+5. **停止條件**：symptom／repro steps／expected-vs-actual 這些問不出來 → 停下來，轉 `converge`，不要直接滑進 Phase 2 開始瞎猜 root cause
 
 #### Phase 2: 找 Root Cause
 
@@ -27,7 +28,7 @@ description: 'Trigger when the user mentions debugging, investigating errors, fi
 
 #### Phase 3: 修復
 
-1. 寫 failing test 重現問題（Java：JUnit 5；Vue：Vitest）
+1. 用該專案既有的測試框架寫一個 failing test 重現問題
 2. 最小改動修復（只改必要的）
 3. 確認 test 通過 + 無 regression
 
@@ -49,16 +50,10 @@ description: 'Trigger when the user mentions debugging, investigating errors, fi
 ### 何時用 sub-agent
 
 - 同時驗證多個 root cause 假設
-- 需要搜尋大範圍 codebase（13 個 Maven module）
+- 需要搜尋大範圍 codebase（跨多個模組／套件）
 - 改動涉及多個模組，需要平行確認影響範圍
 
-### _hitrust 常見除錯切入點
+### 常見切入點對照表（依你的環境自行維護，本 skill 不內建）
 
-| Symptom | 第一個檢查 |
-|---------|----------|
-| HTTP 401/403 | Spring Security filter chain (`SecurityConfig.java`) + JWT 驗證 |
-| Connection pool 耗盡 | HikariCP 設定（4 datasource：settings/transaction/logs/permanent）|
-| Apollo config 沒生效 | `apollo.bootstrap.namespaces` + 確認 namespace publish |
-| Cloud SQL 連不上 | `./cloud-sql-proxy` 是否啟動 + IAM SA 權限 |
-| GKE pod CrashLoopBackOff | `kubectl describe pod` + check JRE17 vs JRE21 image mismatch |
-| GitLab pipeline 失敗 | 對應 `cicd-*` repo 的 `.remote-gitlab-ci.yml` + runner tag `shareconnect-gke-runner` |
+「這個 symptom 先查哪裡」高度依賴技術棧與部署方式，寫進本 skill 會讓它綁死在某個環境。
+你的環境若已有程式碼導航索引或除錯手冊，**Phase 2 列假設之前先查它**，比從零猜快得多。

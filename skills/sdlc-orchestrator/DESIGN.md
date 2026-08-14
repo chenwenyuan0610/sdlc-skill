@@ -1,8 +1,8 @@
 # SDLC Orchestrator — 設計摘要
 
-> 狀態：**9 份 Skill + 3 份角色檔 + 2 份共用 references 已實作完成**（8 個 phase skill + 1 個 change-request 分診 skill；角色檔 `agents/sdlc-implementer|sdlc-reviewer|sdlc-verifier.md`；共用 `references/agent-teams.md` + `references/severity-format.md`）。細節理由與被否決方案 → `DESIGN-RATIONALE.md`（需要時再看）。
+> 狀態：**11 份 Skill + 3 份角色檔 + 5 份共用 references 已實作完成**（8 個 phase skill + 1 個 change-request 分診 skill；角色檔 `agents/sdlc-implementer|sdlc-reviewer|sdlc-verifier.md`；共用 `references/agent-teams.md` + `references/severity-format.md`）。細節理由與被否決方案 → `DESIGN-RATIONALE.md`（需要時再看）。
 > 來源：`SDLC_主流程版_IAO.md`（8 階段 35 步驟 SDLC 流程）。
-> 實際檔案：安裝時所選 `skills/` 根目錄下的 `{product-discovery,requirement-scoping,system-design,dev-setup,implementation-handoff,qa-handoff,release-handoff,ops-feedback,change-request}/SKILL.md`
+> 實際檔案：`.claude/skills/{product-discovery,requirement-scoping,system-design,dev-setup,implementation-handoff,qa-handoff,release-handoff,ops-feedback,change-request}/SKILL.md`
 
 ## 這是什麼
 
@@ -61,7 +61,7 @@
 | E1 觸發分工 | product-discovery 用「確定性」判斷取代「規模」判斷（規模判斷有循環依賴：規模要等做完需求發想才知道） | `product-discovery`/`system-design` SKILL.md 已改 |
 | E2 中途例外 | 8 份 SKILL.md 停止條件統一補一行「發現前面階段有問題→明確告知回哪個 phase」 | 8 份 SKILL.md 已改 |
 | E3 Exit Criteria 補齊 | 全部比照 Phase 3 補正式 checklist（Lead 原建議「全部不補」，user 選擇更完整的方案，覆蓋 Lead 建議） | 7 份新 `references/phase-exit-criteria.md` 已建立 |
-| E4 Agent teams | 現在就做最小雛形：Workflow tool 做「system-design 步驟11 多角度並行評估」，範圍限定不擴及其他 phase | `system-design/references/agent-teams-workflow.md` 已建立（**第七輪已移除，不在本包內**）|
+| E4 Agent teams | 現在就做最小雛形：Workflow tool 做「system-design 步驟11 多角度並行評估」，範圍限定不擴及其他 phase | `system-design/references/agent-teams-workflow.md` 已建立（**2026-07-30 復原**：第七輪曾以「Workflow tool 是 Claude Code 專屬、Codex 吃不到」為由移除，後改判為優雅降級——Claude 使用者可用，Codex 使用者跳過即可，不阻塞流程）|
 
 ## 第三輪：Agent 派工方式（全部已定案）
 
@@ -123,7 +123,7 @@
 
 **觸發**：user 指出「agent 不是應該放 agent 資料夾裡面嗎」——第七輪的 `agent-teams.md` 只是分級表，沒有真正的角色定義檔。參考 `另一個既有專案` 做法但不照抄：`另一個既有專案` 角色檔的技術棧 checklist 學不來（通用版不知道使用者技術棧），但**立場**（如 verifier「預設有問題直到證明清白」）與技術棧無關，可以搬。
 
-**落地**：3 份角色檔進安裝時獨立選定的角色根目錄（`sdlc-implementer`＝先探索專案慣例再實作＋品質門禁 0 issues；`sdlc-reviewer`＝建設性審查；`sdlc-verifier`＝對抗性驗證，target=security|evidence 切換）。Claude Code 放在 `.claude/agents/` 時可註冊成 agent 型別；Codex 標準位置或自訂位置則作為 embed 給 generic agent 的角色定義。實際路徑由 Entry Protocol 的 `<agents-root>` 提供，不假設與 skills 同層。配套把 severity 精神改寫成技術棧無關版 → `references/severity-format.md`。**適用範圍**：Tier 分級只對 Phase 3/5/6 有意義（工作單元可拆可平行）；Phase 1/2/4 是序列人機對話，天生不適用，非遺漏。
+**落地**：3 份角色檔進 `.claude/agents/`（`sdlc-implementer`＝先探索專案慣例再實作＋品質門禁 0 issues；`sdlc-reviewer`＝建設性審查；`sdlc-verifier`＝對抗性驗證，target=security|evidence 切換）；均為 embed 進 `general-purpose` 的角色定義，非註冊 subagent_type。配套把 severity 精神改寫成技術棧無關版 → `references/severity-format.md`。**適用範圍**：Tier 分級只對 Phase 3/5/6 有意義（工作單元可拆可平行）；Phase 1/2/4 是序列人機對話，天生不適用，非遺漏。
 
 ## 第九輪：白紙測試打臉 + CLAUDE.md 兩個源頭 bug + 團隊可攜的 Entry Protocol
 
@@ -141,48 +141,55 @@
 ### Entry Protocol（可直接複製進任何團隊自己的 `CLAUDE.md` 或 `AGENTS.md`）
 
 ```
-開始任何實作/測試/部署/維運工作前，先檢查你要動的那個程式專案有沒有 docs/ 資料夾。
+先確認你要動的那個程式專案有沒有 docs/ 資料夾，再照下面判斷這件事該從哪裡開始。
 
-規則由上而下逐條檢查，第一條命中就採用，不再往下看。
-本次安裝的 skill 根目錄是：{{SKILLS_ROOT}}
-本次安裝的角色檔根目錄是：{{AGENTS_ROOT}}
-下面的 `<skill-root>` 都代表這個完整路徑；不要自行改猜 `.claude/skills` 或 `.agents/skills`。
-下面的 `<agents-root>` 都代表角色檔的完整路徑；它可以與 `<skill-root>` 來自不同工具或自訂目錄。
+⚠ 規則由上而下逐條檢查，第一條命中就採用，不再往下看。
+⚠ 順序是刻意的：**越後面的階段排越前面**。這樣做完一個階段回來重判時，會往前走，不會被前面某個「一直都成立」的條件吸回去。
+下面只寫 skill 名稱，實際位置是：
 
-- docs/handoff-log.md 裡有任何一節標著「進行中」或沒有寫「狀態：完成」→ 那一節就是目前的階段，
-  打開並讀取 <skill-root>/<該階段對應的 skill>/SKILL.md 續作（不要因為標頭已存在就當成做完了）
-- 沒有 docs/ 或 docs/ 裡沒有任何 SDLC 產出物，先分辨這是「全新構想」還是「既有系統」：
-  - 全新構想、還沒有任何既有程式碼/系統 → 若問題/使用者/方案任一不確定，從
-    <skill-root>/product-discovery/SKILL.md 開始；三者都已明確而想直接動手也可以，
-    但那等於自願跳過需求與設計階段、不會留下 docs/ 產出物，下次接手會被判定回第一階段
-  - 已經有在跑的既有程式碼（老專案採用這套流程，只是還沒補 docs/）→ 不要當成新專案。
-    瑣碎小改直接動手；需要新設計決策或範圍不確定 → 打開並讀取
-    <skill-root>/change-request/SKILL.md，照做（它會用程式碼現況當基線分診）
-- 有 docs/product-discovery.md，沒有 docs/requirements-spec.md
-  → 打開並讀取 <skill-root>/requirement-scoping/SKILL.md，照做
-- 有 docs/requirements-spec.md，設計文件還沒齊 → 打開並讀取
-  <skill-root>/system-design/SKILL.md，照做
-  （設計算完成的條件：有 docs/design.md；或 architecture.md 加上 db-schema.md／api-spec.md／
-    components.md／modules.md 其中任一份；或 architecture.md 裡明確寫了本專案不涉及
-    資料庫／對外介面。單獨一份 architecture.md 又沒有這類聲明，不算完成）
-- 有設計文件，沒有 docs/dev-setup.md → 打開並讀取 <skill-root>/dev-setup/SKILL.md，照做
-- 有 docs/dev-setup.md，docs/handoff-log.md 沒有「## Phase 5」完成記錄
-  → 打開並讀取 <skill-root>/implementation-handoff/SKILL.md，照做
-- docs/handoff-log.md 有「## Phase 5」完成記錄，沒有「## Phase 6」記錄
-  → 打開並讀取 <skill-root>/qa-handoff/SKILL.md，照做
-- docs/handoff-log.md 有「## Phase 6」通過記錄，沒有「## Phase 7」記錄
-  → 打開並讀取 <skill-root>/release-handoff/SKILL.md，照做
-- 已上線 / 有 docs/feedback-log.md，且沒有任何進行中的階段
-  → 打開並讀取 <skill-root>/ops-feedback/SKILL.md，照做
-- （跨階段）專案已有 docs/ 需求規格或設計文件，現在出現新的變更需求、不確定是否在既有範圍內
-  → 打開並讀取 <skill-root>/change-request/SKILL.md，照做
+  skill  →  {{SKILLS_ROOT}}/<名稱>/SKILL.md
+  角色檔 →  {{AGENTS_ROOT}}/
 
-docs/ 已經有任何 SDLC 產出物，就代表這個專案已經在流程裡，不可以跳過中間的階段。
-完成任一階段後，回到本規則重新判斷下一步，不要憑對話印象直接續做。
-不確定現在在哪個階段時，先看 docs/ 裡實際有哪些檔案，不要憑印象判斷。
+⚠ 開始判斷之前先看一眼 docs/sdlc-mode.md，它宣告這個專案要跑哪幾關；沒有這個檔就當「全跑」，那是預設值。之所以要有這個檔：檔案缺席永遠只能解讀成「還沒做」，唯有一份正面存在的宣告才能解讀成「刻意不做」，否則下面的規則分不出這兩件事。三種模式、以及「實作與測試兩關永遠不能跳」的下限，見 sdlc-orchestrator/references/tailoring.md。
+
+- 問題本身還講不清楚（不確定是全新構想還是既有系統的問題／bug 不知道根因或需求在哪／還沒決定要不要做）→ 讀 converge，照做。這一條優先於下面所有條件，包含 docs/ 已經有東西的情況；它純討論、不改任何程式碼或資料庫，講清楚之後再回到本規則重新判斷。
+
+- docs/handoff-log.md 裡有任何一節的第一行是「狀態：進行中」→ 那一節就是目前的階段，讀該階段對應的 skill 續作。不要因為標頭已存在就當成做完了。
+
+- docs/handoff-log.md 有「## Phase 7」而且那一節是「狀態：完成」，或系統已經上線 → 讀 ops-feedback，照做。
+
+- docs/handoff-log.md 有「## Phase 6」而且那一節是「狀態：完成」，但沒有「## Phase 7」→ 讀 release-handoff，照做。
+
+- docs/handoff-log.md 有「## Phase 5」而且那一節是「狀態：完成」，但沒有「## Phase 6」→ 讀 qa-handoff，照做。這一關不可以跳過，也不因為「這次改得很小」而免除：跳過的是設計與開發前準備，不包含測試。
+
+- docs/handoff-log.md 沒有「## Phase 5」這一節，而且下列任一成立 → 讀 implementation-handoff，照做：
+    有 docs/dev-setup.md（全新專案走完了開發前準備）
+    或 有 docs/change-specs/ 底下的輕量規格（既有專案經 change-request 分診轉來）
+    或 有這次變更的單一面向設計文件（既有專案經 change-request → system-design 轉來）
+
+- 有 docs/requirements-spec.md，但設計文件還沒齊 → 讀 system-design，照做。設計算完成的條件，三者任一即可：①有 docs/design.md ②有 architecture.md，加上 db-schema.md／api-spec.md／components.md／modules.md 任一份 ③有 architecture.md，且檔內明確寫了本專案不涉及資料庫／對外介面。單獨一份 architecture.md 又沒有第三點的聲明，不算完成。這個判定只適用全新專案——既有系統只補單一設計面向是正常的。
+
+- 有 docs/product-discovery.md，但沒有 docs/requirements-spec.md → 讀 requirement-scoping，照做。
+
+- 有 docs/dev-setup.md 但骨架還沒建起來 → 讀 dev-setup，照做。既有專案不走這一關（骨架／版控／排程本來就存在），它唯一不能丟的「測試描述」改由 change-request 或 system-design 產出。
+
+- 以上都不命中，代表這是一件還沒開始的新工作。先分辨是「全新構想」還是「既有系統」：
+
+  - 全新構想、還沒有任何既有程式碼／系統 → 問題／使用者／方案任一不確定，讀 product-discovery。三者都已明確而想直接動手也可以，但那等於自願跳過需求與設計階段、不會留下 docs/ 產出物。
+
+  - 已經有在跑的既有程式碼（老專案採用這套流程，只是還沒補 docs/）→ 不要當成新專案。瑣碎小改直接動手；需要新設計決策或範圍不確定，讀 change-request，照做（它會用程式碼現況當基線分診）。這次如果是修 bug，先讀 bug-fix：它不是另一條流程，只是把修 bug 特有的前置動作講清楚（怎麼重現、先寫一個會失敗的測試、找同類），然後把你接回 change-request 與後面的階段。
+
+⚠ 改動這套規則本身之後（不是改產品，是改規則），讀 rule-eval 驗一次它有沒有真的生效。那不是工作路由，是驗規則的方法，所以不在上面的判斷順序裡。
+
+⚠ 判斷「這個專案在不在流程裡」只看 docs/product-discovery.md 這一個檔，不要看其他檔名——requirements-spec.md、design.md、architecture.md、dev-setup.md、handoff-log.md、change-log.md、change-specs/、converge-summary.md、feedback-log.md 這些，既有系統做增量變更時也會產生。
+
+完成任一階段後，回到本規則重新判斷下一步，不要憑對話印象直接續做。不確定現在在哪個階段時，先看 docs/ 裡實際有哪些檔案，不要憑印象判斷。
 ```
 
-**分發方式已決定（2026-07-10 user 拍板）：整包目錄複製**——同事把這包（9 份 skill 目錄 + 3 份 `agents/sdlc-*.md` + `sdlc-orchestrator/references/` 兩份共用檔）複製進安裝時分別選定的 skill 與角色根目錄；可用 Claude Code 或 Codex 標準位置，也可自訂精確目錄。Entry Protocol 會同時記錄兩個實際路徑，再寫進同一 scope 對應的 `CLAUDE.md` 或 `AGENTS.md`。完整安裝步驟 → `INSTALL.md`。
+
+
+
+**分發方式已決定（2026-07-10 user 拍板）：整包目錄複製**——同事把這包（9 份 skill 目錄 + 3 份 `agents/sdlc-*.md` + `sdlc-orchestrator/references/` 兩份共用檔）複製進自己專案的 `.claude/` 對應位置，並把 Entry Protocol 貼進自己的 `CLAUDE.md`（Claude 用戶）或 `AGENTS.md`（Codex 用戶）。完整安裝步驟 → `INSTALL.md`。
 
 ## 第十二輪：第一次真實全流程運轉（2026-07-10）
 

@@ -1,12 +1,18 @@
-# SDLC 開發流程 skill — 給團隊夥伴
+# SDLC 開發流程包 — 給團隊夥伴
 
-這是一套「從需求到維運」的 AI 協作開發流程。裝進你的專案後，不管你用 Claude Code 還是 Codex，AI 都會照同一套有紀律的流程幫你把專案做完，而且每個階段的產出都會存成文件，不會只留在對話裡消失。
+嗨，這是一套「從需求到維運」的 AI 協作開發流程。裝進你的專案後，不管你用 Claude Code 還是 Codex，AI 都會照同一套有紀律的流程幫你把專案做完，而且每個階段的產出都會存成文件，不會只留在對話裡消失。
+
+## 先讀這個
+
+**`KNOWN-ISSUES.md`** —— 這一版經過三輪獨立稽核，會在生產環境造成損害的 6 個問題已修掉；其餘已知會讓你卡住的地方全部列在那裡，附繞法。撞到沒列到的，照裡面說的登記。
 
 ## 這是什麼
 
-一套 9 個階段的開發流程，對應軟體開發的 8 大階段 + 1 個變更分診：
+一套涵蓋軟體開發 8 大階段的流程，另加 3 個隨時可用的旁路（需求收斂、變更分診、系統性除錯）：
 
-需求發想 → 需求分析 → 設計 → 開發前準備 → 開發實作 → 測試 → 部署 → 維運（＋隨時可用的「變更分診」）
+需求發想 → 需求分析 → 設計 → 開發前準備 → 開發實作 → 測試 → 部署 → 維運
+
+旁路（不在主幹上，需要時才進）：**需求收斂**（問題還講不清楚時的第一站）、**變更分診**（既有系統的增量變更）、**系統性除錯**
 
 每個階段是一份獨立的 skill，AI 會依你專案目前的狀態自動判斷該進哪一階段。**核心特色**：每階段的產出（需求規格、設計文件、開發排程、測試結果…）都會被寫成 `docs/` 資料夾裡的 markdown 檔，所以任何人（或任何一次新的 AI 對話）接手時，打開 `docs/` 就知道專案走到哪、下一步做什麼。
 
@@ -41,8 +47,6 @@
 - 重複執行是安全的，之後有新版直接再跑一次就是更新，不會貼出重複內容
 
 > 不想跑腳本、或想確切知道它動了什麼 → `skills/sdlc-orchestrator/INSTALL.md` 有手動安裝步驟。
->
-> **手動安裝提醒**：`skills/sdlc-orchestrator/claude_sdlc.md` 是專案 `CLAUDE.md` 的流程入口參考範本（Codex 可對應放進 `AGENTS.md`）。如果自行把 `skills/` 與 `agents/` 放進工具的標準目錄，記得同時參考這份檔案設定專案規則，這樣才能觸發 SDLC skill。
 
 ## 怎麼用
 
@@ -56,12 +60,13 @@
 
 **先完全關閉再重新開啟 Claude Code / Codex** —— 工具通常在啟動時載入規則與 skill，這是最常見的「裝了沒反應」原因。
 
-然後輸入 `/`，應該能看到這 9 個 skill（**名字裡沒有 sdlc 字樣**，別找錯）：
+然後輸入 `/`，應該能看到這 11 個 skill（**名字裡沒有 sdlc 字樣**，別找錯）：
 
 ```
-product-discovery   requirement-scoping   system-design
-dev-setup           implementation-handoff   qa-handoff
-release-handoff     ops-feedback          change-request
+converge            product-discovery     requirement-scoping
+system-design       dev-setup             implementation-handoff
+qa-handoff          release-handoff       ops-feedback
+change-request      debug
 ```
 
 或者直接對 AI 說「我想開發一個新的小工具」。裝對的話，它**不會**直接開始寫程式，而是會先問你需求、或先去看你專案的 `docs/` 資料夾。
