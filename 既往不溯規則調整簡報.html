@@ -1,0 +1,203 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>既往不溯｜SDLC 規則調整</title>
+  <style>
+    :root {
+      --ink: #f3f6fb;
+      --muted: #aab6c7;
+      --bg: #0b1020;
+      --panel: rgba(20, 29, 51, .78);
+      --line: rgba(169, 190, 221, .18);
+      --cyan: #68e1e8;
+      --amber: #ffca72;
+      --green: #87e2ad;
+      --red: #ff8c93;
+    }
+
+    * { box-sizing: border-box; }
+    html, body { margin: 0; min-height: 100%; }
+    body {
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 14% 12%, rgba(104, 225, 232, .12), transparent 32%),
+        radial-gradient(circle at 88% 78%, rgba(255, 202, 114, .09), transparent 28%),
+        var(--bg);
+      font-family: "Segoe UI", "Noto Sans TC", system-ui, sans-serif;
+      overflow: hidden;
+    }
+
+    .deck { min-height: 100vh; display: grid; grid-template-rows: 1fr auto; }
+    .stage { position: relative; min-height: 0; }
+    .slide {
+      position: absolute; inset: 0;
+      padding: clamp(28px, 6vw, 78px) clamp(24px, 8vw, 120px) 48px;
+      display: grid; align-content: center;
+      opacity: 0; transform: translateX(28px);
+      pointer-events: none;
+      transition: opacity .35s ease, transform .35s ease;
+    }
+    .slide.active { opacity: 1; transform: translateX(0); pointer-events: auto; }
+    .eyebrow { color: var(--cyan); letter-spacing: .16em; text-transform: uppercase; font-size: 12px; font-weight: 700; }
+    h1, h2, p { margin: 0; }
+    h1 { max-width: 900px; font-size: clamp(42px, 8vw, 92px); line-height: .98; letter-spacing: -.055em; margin: 18px 0 24px; }
+    h2 { font-size: clamp(30px, 4vw, 56px); line-height: 1.05; letter-spacing: -.04em; margin: 14px 0 28px; }
+    .lead { max-width: 720px; color: var(--muted); font-size: clamp(17px, 2vw, 23px); line-height: 1.65; }
+    .date { margin-top: 36px; color: var(--muted); font-size: 14px; }
+
+    .grid { display: grid; gap: 16px; }
+    .grid.three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .grid.two { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .panel {
+      background: var(--panel); border: 1px solid var(--line); border-radius: 18px;
+      padding: 23px; backdrop-filter: blur(12px);
+    }
+    .panel h3 { margin: 0 0 11px; font-size: 18px; }
+    .panel p, .panel li { color: var(--muted); line-height: 1.65; }
+    .panel ul { margin: 0; padding-left: 20px; }
+    .tag { display: inline-block; color: var(--bg); background: var(--cyan); border-radius: 999px; padding: 5px 10px; font-size: 12px; font-weight: 700; margin-bottom: 15px; }
+    .tag.amber { background: var(--amber); }
+    .tag.green { background: var(--green); }
+    .tag.red { background: var(--red); }
+
+    .flow { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 14px; margin-top: 20px; }
+    .flow .arrow { color: var(--cyan); font-size: 30px; text-align: center; }
+    .old { border-color: rgba(255, 140, 147, .38); }
+    .new { border-color: rgba(135, 226, 173, .42); }
+    .old strong, .new strong { display: block; font-size: 21px; margin-bottom: 10px; }
+    .old strong { color: var(--red); }
+    .new strong { color: var(--green); }
+
+    .quote { max-width: 920px; border-left: 4px solid var(--cyan); padding: 18px 0 18px 26px; font-size: clamp(26px, 4vw, 48px); line-height: 1.25; letter-spacing: -.035em; }
+    .quote small { display: block; color: var(--muted); font-size: 15px; line-height: 1.6; margin-top: 20px; letter-spacing: 0; }
+    .metric { font-size: 42px; color: var(--green); font-weight: 700; margin-bottom: 5px; }
+    .files { display: flex; flex-wrap: wrap; gap: 9px; margin-top: 24px; }
+    code { color: var(--amber); font-family: Consolas, monospace; font-size: 13px; }
+    .file { padding: 9px 12px; border: 1px solid var(--line); border-radius: 9px; background: rgba(255,255,255,.035); }
+
+    .controls { display: flex; align-items: center; gap: 14px; padding: 18px clamp(20px, 8vw, 120px) 22px; border-top: 1px solid var(--line); background: rgba(7, 10, 21, .54); }
+    button { color: var(--ink); background: transparent; border: 1px solid var(--line); border-radius: 10px; padding: 10px 15px; cursor: pointer; font: inherit; }
+    button:hover, button:focus-visible { border-color: var(--cyan); outline: 2px solid rgba(104, 225, 232, .25); outline-offset: 2px; }
+    .progress { height: 3px; flex: 1; background: rgba(169, 190, 221, .18); border-radius: 3px; overflow: hidden; }
+    .bar { height: 100%; width: 20%; background: var(--cyan); transition: width .3s ease; }
+    .counter { color: var(--muted); min-width: 52px; text-align: right; font-variant-numeric: tabular-nums; }
+
+    @media (max-width: 700px) {
+      body { overflow: auto; }
+      .deck { min-height: 100svh; }
+      .stage { min-height: 720px; }
+      .slide { align-content: start; padding-top: 42px; }
+      .grid.three, .grid.two, .flow { grid-template-columns: 1fr; }
+      .flow .arrow { transform: rotate(90deg); }
+      .controls { position: sticky; bottom: 0; }
+    }
+    @media (prefers-reduced-motion: reduce) { .slide, .bar { transition: none; } }
+  </style>
+</head>
+<body>
+  <main class="deck" aria-label="既往不溯規則調整簡報">
+    <section class="stage">
+      <article class="slide active" aria-hidden="false">
+        <div class="eyebrow">SDLC rule update · 2026.09.01</div>
+        <h1>既往不溯</h1>
+        <p class="lead">可以修改舊程式，但只修改本次必要的部分；驗證本次變更，不回頭替無關的歷史程式碼補測試。</p>
+        <p class="date">本次調整：6 份流程規則文件同步更新</p>
+      </article>
+
+      <article class="slide" aria-hidden="true">
+        <div class="eyebrow">01 · 原本的規則</div>
+        <h2>問題不在「能不能改舊 code」</h2>
+        <div class="grid three">
+          <div class="panel old"><span class="tag red">原本</span><h3>測試不可省</h3><p>既有專案的小改仍被要求進入 Phase 6，不能因為變更很小而跳過測試。</p></div>
+          <div class="panel old"><span class="tag red">原本</span><h3>沒有測試就補</h3><p>如果這次要動的程式碼沒有測試覆蓋，Phase 6 被定義成補測試，而不只是測本次變更。</p></div>
+          <div class="panel old"><span class="tag red">原本</span><h3>回歸優先</h3><p>規則強調舊專案的回歸測試價值更高，容易延伸成整段歷史程式碼都要補測試。</p></div>
+        </div>
+      </article>
+
+      <article class="slide" aria-hidden="true">
+        <div class="eyebrow">02 · 新的核心原則</div>
+        <h2>範圍跟著變更走</h2>
+        <div class="quote">「只改本次必要的部分；只驗證本次變更及其直接受影響的行為。」<small>這不是禁止修改舊程式，而是禁止因為碰到舊程式，就擴大成歷史清理或全面補測試。</small></div>
+        <div class="files">
+          <span class="file"><code>必要修改</code></span>
+          <span class="file"><code>直接受影響</code></span>
+          <span class="file"><code>不回溯補齊</code></span>
+        </div>
+      </article>
+
+      <article class="slide" aria-hidden="true">
+        <div class="eyebrow">03 · 流程影響</div>
+        <h2>保留關卡，收斂範圍</h2>
+        <div class="flow">
+          <div class="panel old"><strong>不再要求</strong><p>替未修改、與本次無關的舊程式碼補測試。</p></div>
+          <div class="arrow" aria-hidden="true">→</div>
+          <div class="panel new"><strong>仍然要求</strong><p>本次變更要經過必要測試或明確的驗證方式，並接續既有 Phase 6 流程。</p></div>
+        </div>
+        <div class="grid two" style="margin-top:16px">
+          <div class="panel"><span class="tag green">保留</span><h3>本次變更的驗證不可省</h3><p>小改也要驗證，但驗證對象是本次改動與直接影響範圍。</p></div>
+          <div class="panel"><span class="tag amber">新增邊界</span><h3>不為歷史負債買單</h3><p>發現其他問題可以記錄成後續工作，不在本次票據內順手處理。</p></div>
+        </div>
+      </article>
+
+      <article class="slide" aria-hidden="true">
+        <div class="eyebrow">04 · 落地與驗證</div>
+        <h2>已同步到規則來源</h2>
+        <div class="grid three">
+          <div class="panel"><div class="metric">6</div><p>份規則文件已更新，包含入口、分診、實作與測試階段。</p></div>
+          <div class="panel"><div class="metric">PASS</div><p>規則反向檢查通過：故意移除「既往不溯」文字時，檢查能抓到缺漏。</p></div>
+          <div class="panel"><div class="metric">37</div><p>既有測試通過；另有 3 個與本次無關的原有路徑斷言失敗、7 個跳過。</p></div>
+        </div>
+        <div class="files">
+          <span class="file"><code>DESIGN.md</code></span>
+          <span class="file"><code>sdlc-entry.md</code></span>
+          <span class="file"><code>change-request/SKILL.md</code></span>
+          <span class="file"><code>implementation-handoff/SKILL.md</code></span>
+          <span class="file"><code>qa-handoff/SKILL.md</code></span>
+          <span class="file"><code>claude_sdlc.md</code></span>
+        </div>
+      </article>
+    </section>
+
+    <nav class="controls" aria-label="簡報控制列">
+      <button type="button" data-action="prev" aria-label="上一張">← 上一張</button>
+      <div class="progress" role="progressbar" aria-label="簡報進度" aria-valuemin="1" aria-valuemax="5" aria-valuenow="1"><div class="bar"></div></div>
+      <button type="button" data-action="next" aria-label="下一張">下一張 →</button>
+      <span class="counter" aria-live="polite">1 / 5</span>
+    </nav>
+  </main>
+
+  <script>
+    (() => {
+      const slides = [...document.querySelectorAll('.slide')];
+      const bar = document.querySelector('.bar');
+      const counter = document.querySelector('.counter');
+      const progress = document.querySelector('[role="progressbar"]');
+      let current = 0;
+
+      function show(index) {
+        current = (index + slides.length) % slides.length;
+        slides.forEach((slide, i) => {
+          const active = i === current;
+          slide.classList.toggle('active', active);
+          slide.setAttribute('aria-hidden', String(!active));
+        });
+        const value = current + 1;
+        bar.style.width = `${value / slides.length * 100}%`;
+        counter.textContent = `${value} / ${slides.length}`;
+        progress.setAttribute('aria-valuenow', String(value));
+      }
+
+      document.querySelector('[data-action="prev"]').addEventListener('click', () => show(current - 1));
+      document.querySelector('[data-action="next"]').addEventListener('click', () => show(current + 1));
+      document.addEventListener('keydown', (event) => {
+        if (event.key === 'ArrowLeft' || event.key === 'PageUp') show(current - 1);
+        if (event.key === 'ArrowRight' || event.key === 'PageDown' || event.key === ' ') show(current + 1);
+        if (event.key === 'Home') show(0);
+        if (event.key === 'End') show(slides.length - 1);
+      });
+    })();
+  </script>
+</body>
+</html>
