@@ -1,5 +1,7 @@
 # SDLC Orchestrator — 設計摘要
 
+> ⚠️ 修改本檔案前後，MUST 依 `CHANGELOG.md` 的規則記錄異動。
+
 > 狀態：**11 份 Skill + 3 份角色檔 + 5 份共用 references 已實作完成**（8 個 phase skill + 1 個 change-request 分診 skill；角色檔 `agents/sdlc-implementer|sdlc-reviewer|sdlc-verifier.md`；共用 `references/agent-teams.md` + `references/severity-format.md`）。細節理由與被否決方案 → `DESIGN-RATIONALE.md`（需要時再看）。
 > 來源：`SDLC_主流程版_IAO.md`（8 階段 35 步驟 SDLC 流程）。
 > 實際檔案：`.claude/skills/{product-discovery,requirement-scoping,system-design,dev-setup,implementation-handoff,qa-handoff,release-handoff,ops-feedback,change-request}/SKILL.md`

@@ -1,5 +1,7 @@
 # 框架缺陷登記簿（Framework Defect）
 
+> ⚠️ 修改本檔案前後，MUST 依 `../CHANGELOG.md` 的規則記錄異動。
+
 > **登記簿放哪，由使用環境的綁定層（`CLAUDE.md`／`AGENTS.md`）指定。**
 > **綁定層沒指定 → 就用本檔下方的「## 登記簿」表，直接 append 一列。** 不必先去建別的檔、也不必先問誰。
 
@@ -42,10 +44,16 @@
 
 | ID | 發現於 | 描述 | 證據 | 類型 | 影響範圍 | status |
 |---|---|---|---|---|---|---|
+| FD-01 | `system-design`（演進模式，`change-request` 分診為「需要新設計決策」轉入的支線） | 該支線沒有規定 REQ-nn 表要放哪裡，導致設計決策沒有正式編號、下游測試/交接文件無法用 `[REQ-nn]` 對帳。`change-request` 分診到「在既有範圍內」那條路有明訂放 `docs/change-specs/<變更名>.md` 第一段當唯一真相源（`traceability.md` 規則二），但轉去 `system-design` 這條路完全沒有對應規定 | cloud-oa-system 專案 ISSUE-5（`docs/5-merge-html/design.md`）：走完整個 system-design 演進支線、產出設計文件與測試描述，全程沒有 REQ-nn 表，`handoff-log.md` 的「對應 REQ」欄只能填模糊的文件章節指標，無法用 `[REQ-nn]` grep 對帳 | 缺步驟 | 影響所有走「change-request → 需要新設計決策 → system-design」這條演進支線的專案 | in-progress |
+| FD-02 | `implementation-handoff` 完工關卡「2 獨立覆核」／`qa-handoff`（Phase 6） | 完工關卡要求「獨立覆核」，但規則沒有要求覆核要帶對抗性/紅軍性質——實作者自己的測試與 Lead 執行的 end-to-end 驗證都只驗證「照設計走的路徑」，容易系統性漏掉「使用者會怎麼亂用」這種情境（例如：只選1份檔案送出、選重複檔案、想在重新整理後找回結果、資料來源該用下拉選單卻讓自由輸入）。目前規則對「獨立覆核」沒有明訂最低要涵蓋哪幾類對抗性情境，導致品質門禁+Lead驗證都過了，使用者手動測試還是找到4個以上的真實缺陷 | cloud-oa-system 專案 ISSUE-5：`docs/handoff-log.md` 記錄的 Lead end-to-end 驗證（含瀏覽器實測 upload→poll→download 全流程）全部通過，`mvn test`/`npm test` 300+ 測試全綠，但使用者事後手動測試仍發現：(1) 少於2份檔案未擋下、(2) 重複檔案未擋下、(3) 無法移除已選檔案、(4) 合併輸出的 Show Result 顯示 issuer OID 而非名稱、(5) 列表顏色被簡化掉、(6) responseCode 編輯頁的 issuer 該用既有資料源下拉選單卻是自由輸入 | 缺步驟 | 影響所有走 `implementation-handoff`/`qa-handoff` 的專案——「獨立覆核」定義過鬆，容易讓實作者驗證跟真正的驗收測試趨同 | in-progress |
+| FD-03 | `implementation-handoff`／`qa-handoff`「下一步」段 | 「下一步」規則只要求「提醒使用者」下一個 phase 是必經（且明講「不是可選項」），但沒有規定提醒要用什麼機制呈現，也沒規定沒人回應時要不要重新提出。實際執行時，提醒被埋進完工總結的一段文字裡（不是獨立的是非題），使用者沒特別回應，後續新一輪工作（bug 修復）就默默蓋過這個提醒、沒有重新提出——導致 Phase 6（`qa-handoff`）從頭到尾沒有真的被觸發過。同一份對話裡，凡是規則明文要求「MUST 選項化」的決策點都有確實用明確選項提問處理，只有「下一步」提醒沒有這個要求，行為上也確實比較弱，顯示規則內容本身的嚴謹度不足是可歸責原因之一，不能只算執行疏失 | cloud-oa-system 專案 ISSUE-5：第一輪 7 個子項目完工後，`docs/5-merge-html/handoff-log.md`「下一步」段只用文字寫「依流程規則下一站是qa-handoff...需要使用者決定是否現在進行」，未用明確選項提問；使用者當下沒有回應，隨後兩輪 bug 修復／新功能開發皆未重新提出這個提醒，直到使用者自己主動問「為什麼不執行qa-handoff」才發現這個缺口 | 缺步驟 | 影響所有走 9 個 phase skill、「下一步」段只寫「提醒使用者」而非強制選項化的所有轉換點，不限 Phase 5→6 | accepted |
 
 ## 角色與覆核紀錄
 
-> **覆核者欄空白＝該筆不得標 `fixed`。** 這是靠人讀表遵守，不靠工具擋——工具不會跟著規則包一起發出去。
+> **覆核者欄空白＝該筆不得標 `fixed`。** 這是靠人讀表遵守，不靠工具擋——工具不會跟著規則包一起發出去。使用環境 MAY 另加一支掃「標了 `fixed` 但覆核者欄空白」的腳本輔助（判準與做法 → `tooling-reuse.md`），但腳本是加速手動核對的輔助，不是這條規則成立的前提。
 
 | ID | 發現者 | `accepted` 標記者 | 修正者（負責人） | 覆核者 |
 |---|---|---|---|---|
+| FD-01 | Claude（cloud-oa-system, ISSUE-5 對話中，2026-08-17） | Jesse Meng（2026-08-18 對話中，先只改 skill 規則本身，暫不回頭補 ISSUE-5 的 REQ-nn 表） | Claude（2026-08-18，於 `traceability.md` 規則二新增演進支線條款＋`system-design/SKILL.md` 完成條件與測試描述段落補條款，見 `CHANGELOG-ENTRIES.md` SKC-20260818-03） | 待覆核 |
+| FD-02 | Claude（cloud-oa-system, ISSUE-5 對話中，2026-08-17，使用者手動測試回報後歸納） | Jesse Meng（2026-08-18 對話中，並提出具體規則內容：正向+反向測試、綠地紅軍測試、三層驗證） | Claude（2026-08-18，新增 `test-case-coverage.md` + 四份 SKILL.md 條款，見 `CHANGELOG-ENTRIES.md` SKC-20260818-01） | 待覆核 |
+| FD-03 | Claude（cloud-oa-system, ISSUE-5 對話中，2026-08-18，使用者追問「為什麼不執行qa-handoff」後根因分析發現） | Jesse Meng（2026-08-18 對話中） | | |

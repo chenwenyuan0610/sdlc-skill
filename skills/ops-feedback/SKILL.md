@@ -3,6 +3,8 @@ name: ops-feedback
 description: TRIGGER when 系統已上線，要建立監控、收集回饋、規劃下一輪迭代（對應原 SDLC 步驟33-35：監控日誌/回饋收集/修正優化）。DO NOT TRIGGER when 還沒上線（→ release-handoff）。
 ---
 
+> ⚠️ 修改本檔案前後，MUST 依 `../sdlc-orchestrator/CHANGELOG.md` 的規則記錄異動。
+
 # Ops Feedback — SDLC Phase 8 維運
 
 依 `../sdlc-orchestrator/SDLC_主流程版_IAO.md` 步驟 33-35。**Lead 對話彙整為主，發現新需求時接回 `product-discovery` 形成迴圈。**
@@ -53,7 +55,7 @@ description: TRIGGER when 系統已上線，要建立監控、收集回饋、規
 
 ## 停止條件
 - 回饋內容混雜多個不相關問題 → 先分類，一次只處理一條，避免 scope creep
-- 發現上線的問題其實源自更早的階段（例如需求規格本身就有誤）→ 明確告知使用者要回哪個 phase 重新確認，不要只在維運層面打補丁
+- 發現上線的問題其實源自更早的階段（例如需求規格本身就有誤）→ 明確告知使用者要回哪個 phase 重新確認，不要只在維運層面打補丁；確認要回頭後依 `../sdlc-orchestrator/sdlc-entry.md`「回歸」段回寫狀態（含連鎖回開判斷），不能只在對話裡講一講
 - 卡住的原因是**流程規則本身**（規則寫死了不適用本專案的做法／兩條規則矛盾／判準模糊到判不出來／缺一步接不上）→ **不要就地改規則、不要停工**：append 一列到**框架缺陷登記簿**（status=`proposed`，**證據欄必填**）。登記簿位置 → `../sdlc-orchestrator/references/framework-defects.md`；**該檔可能是登記簿本身，也可能是指向使用環境實際登記簿的指標檔，打開照它說的走**，然後用最接近的合理解讀把工作做完
 
 ## 下一步

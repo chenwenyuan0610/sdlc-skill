@@ -3,6 +3,8 @@ name: bug-fix
 description: TRIGGER when 已經確定是 bug、而且根因已經找到，要把它修掉。DO NOT TRIGGER when 還不知道根因（→ debug）；還不確定這是 bug 還是新需求（→ converge）；或這是新增功能而非修復（→ change-request）。
 ---
 
+> ⚠️ 修改本檔案前後，MUST 依 `../sdlc-orchestrator/CHANGELOG.md` 的規則記錄異動。
+
 # Fix — 修 bug 的骨架
 
 ⚠ **這不是第四條流程。** 修 bug 走的就是既有那條演進路線，本檔只做兩件事：**把 bug 特有的前置動作講清楚**，然後**把你接回主流程**。任何 Tier 分級、審查編制、品質門禁的細節都不在這裡——那些各有唯一擁有檔，本檔只指路。**如果你發現這裡跟那些檔講得不一樣，以那些檔為準，並登記一筆框架缺陷。**
@@ -42,7 +44,7 @@ MUST 寫下：**前置狀態 → 操作 → 實際結果 → 預期結果**。�
 
 ## 然後接回主流程
 
-1. **分診** → `change-request`。修 bug 幾乎都落在「在既有範圍內」，但**判斷仍要做**：根因如果是設計本身有缺，那不是修 bug，是設計變更
+1. **分診** → `change-request`。修 bug 幾乎都落在「在既有範圍內」，但**判斷仍要做**：根因如果是設計本身有缺，那不是修 bug，是設計變更；根因如果是**需求本身沒釐清**（不是設計問題，是當初的需求理解就有誤），那也不是修 bug、也不透過 `change-request`（那是走新變更的路）——這是回歸情境，狀態回寫與跨 phase 處理規則 → `../sdlc-orchestrator/sdlc-entry.md`「回歸」段
 2. **實作** → `implementation-handoff`（Phase 5）
 3. **測試** → `qa-handoff`（Phase 6）。**這一關不因為「只是修個 bug」而免除**——bug 修正落在既有程式碼上，回歸保護的價值在這裡最高
 4. **部署**（需要才走）→ `release-handoff`（Phase 7）
