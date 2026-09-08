@@ -583,6 +583,13 @@ def missing_pack_files():
         # 四個地方引用，缺了它 REQ 表就沒有格式可循。
         orchestrator / "references" / "tailoring.md",
         orchestrator / "references" / "traceability.md",
+        # test-case-coverage 被 4 個 skill 的測試描述段用 MUST 指標指著；
+        # CHANGELOG 被 13 份 SKILL.md ＋ 3 份 agent 的檔頭指著。缺任一份，
+        # 那些 MUST 指標會指向不存在的檔，而安裝當下不會有人叫。
+        orchestrator / "CHANGELOG.md",
+        orchestrator / "references" / "test-case-coverage.md",
+        orchestrator / "references" / "phase-transition-reminders.md",
+        orchestrator / "references" / "tooling-reuse.md",
     ]
     phase_skills = [skill for skill in SKILLS if skill not in NO_EXIT_CRITERIA]
     required += [

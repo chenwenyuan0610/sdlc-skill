@@ -87,6 +87,14 @@ class InstallLocationTests(unittest.TestCase):
             "# Tailoring\n", encoding="utf-8")
         (shared_references / "traceability.md").write_text(
             "# Traceability\n", encoding="utf-8")
+        (shared_references / "test-case-coverage.md").write_text(
+            "# Test case coverage\n", encoding="utf-8")
+        (shared_references / "phase-transition-reminders.md").write_text(
+            "# Phase transition reminders\n", encoding="utf-8")
+        (shared_references / "tooling-reuse.md").write_text(
+            "# Tooling reuse\n", encoding="utf-8")
+        (orchestrator / "CHANGELOG.md").write_text(
+            "# Changelog\n", encoding="utf-8")
         (orchestrator / "sdlc-entry.md").write_text(
             "# Step 0\n", encoding="utf-8")
         (orchestrator / "claude_sdlc.md").write_text(
