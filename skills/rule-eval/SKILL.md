@@ -3,6 +3,8 @@ name: rule-eval
 description: TRIGGER when 你改了這套流程規則本身（或任何給 AI 讀的規則檔），要驗證改完之後規則是否真的有效。DO NOT TRIGGER when 你要驗的是產品功能有沒有做對（→ qa-handoff）；或規則卡住你、要登記缺陷（→ 框架缺陷登記簿）。
 ---
 
+> ⚠️ 修改本檔案前後，MUST 依 `../sdlc-orchestrator/CHANGELOG.md` 的規則記錄異動。
+
 # Eval — 驗規則本身有沒有效
 
 ⚠ **這一份驗的是「規則」，不是「產品」。** 產品對不對走測試關；這裡問的是：**規則改完之後，執行者照著做會不會做對事。**

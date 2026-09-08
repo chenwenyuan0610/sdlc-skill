@@ -3,6 +3,8 @@ name: product-discovery
 description: TRIGGER when 問題本質、目標使用者、解決方案任一還不確定，需要從零開始發想（蒐集原始需求、釐清問題本質、定義使用者情境、發想候選方案、初步可行性評估）。DO NOT TRIGGER when 問題、使用者情境、解決方案都已經明確——不論規模大小，直接跳到對應的後面 phase，或走使用環境既有的功能開發流程。
 ---
 
+> ⚠️ 修改本檔案前後，MUST 依 `../sdlc-orchestrator/CHANGELOG.md` 的規則記錄異動。
+
 # Product Discovery — SDLC Phase 1 需求發想
 
 依 `../sdlc-orchestrator/SDLC_主流程版_IAO.md` 步驟 1-5，引導使用者從零散訴求走到可行方案。**對話式引導流程，Lead 全程主導，不派 agent 執行實作**（步驟5可選派 general-purpose 做技術可行性調查）。

@@ -1,5 +1,7 @@
 # 4-Tier Severity Format — SDLC 審查共用定義（領域中立）
 
+> ⚠️ 修改本檔案前後，MUST 依 `../CHANGELOG.md` 的規則記錄異動。
+
 `sdlc-reviewer`/`sdlc-verifier` 兩個 agent 角色共用此格式，不綁定任何語言/框架。
 
 ## Tier 定義與 Lead 對應行為

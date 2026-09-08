@@ -3,6 +3,8 @@ name: debug
 description: 'Trigger when the user mentions debugging, investigating errors, finding root cause, tracing bugs, or diagnosing unexpected behavior. Uses systematic evidence-based approach — never guess or change code without proof.'
 ---
 
+> ⚠️ 修改本檔案前後，MUST 依 `../sdlc-orchestrator/CHANGELOG.md` 的規則記錄異動。
+
 ## /debug — 系統性除錯
 
 ### 核心原則
@@ -27,6 +29,8 @@ description: 'Trigger when the user mentions debugging, investigating errors, fi
 4. 複雜問題 → spawn sub-agent 平行驗證多個假設
 
 #### Phase 3: 修復
+
+⚠ **Root Cause 若不是程式邏輯錯誤，而是需求本身沒釐清或理解有誤** → 這不是 code bug，是回歸情境，不要在這裡硬修出一個掩蓋需求問題的 code patch。轉 `requirement-scoping`（或對應的既有 phase）處理，狀態回寫與跨 phase 處理規則 → `../sdlc-orchestrator/sdlc-entry.md`「回歸」段。
 
 1. 用該專案既有的測試框架寫一個 failing test 重現問題
 2. 最小改動修復（只改必要的）

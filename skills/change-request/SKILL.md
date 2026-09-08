@@ -3,6 +3,8 @@ name: change-request
 description: TRIGGER when 專案已存在一個運行中/已建置的系統（不論它有沒有 SDLC docs/ 文件），現在出現新的變更需求，範圍不確定是否在既有設計內——這是「演進中的既有專案」的預設入口。DO NOT TRIGGER when 這是全新構想、還沒有任何既有系統可對照（→ product-discovery）或變更瑣碎到一看就知道改哪（→ 直接進開發）。
 ---
 
+> ⚠️ 修改本檔案前後，MUST 依 `../sdlc-orchestrator/CHANGELOG.md` 的規則記錄異動。
+
 # Change Request — SDLC 增量變更分診（既有專案的演進入口）
 
 **本 skill 不做需求分析、不做設計、不開發**，核心工作只有一件事：判斷這次變更該走哪條路，然後分診過去。不重複 `requirement-scoping`/`system-design` 的邏輯。
@@ -41,7 +43,7 @@ description: TRIGGER when 專案已存在一個運行中/已建置的系統（�
 
 | 判斷 | 條件 | 路由 |
 |---|---|---|
-| 在既有範圍內 | 不涉及新的 DB/API/架構/元件/模組決策，只是既有設計下的具體實作 | Lead-direct 寫輕量 spec + ticket。**測試描述不分 Tier 一律 MUST 有**——依既有需求規格書／程式碼現況基線設計，格式同 `dev-setup` 的測試描述（例：「呼叫 `/api/orders/search` 帶 `status=pending`，應該只回傳待處理的訂單」），**寫在程式碼之前**，給後續驗收用，不是給開發者事後參考；Tier 0-1（改一行 log、調 config 值、修 typo）寫一句話即可，Tier 2 以上（Tier 定義 → `../sdlc-orchestrator/references/agent-teams.md`）逐條列。**去處**：帶著輕量 spec 進 `implementation-handoff`（Phase 5），**不必**走 `requirement-scoping`／`system-design`／`dev-setup`（Phase 4 是創世模式專用，既有專案的骨架／版控／排程本來就存在）；使用環境的 CLAUDE.md/AGENTS.md 若對 Phase 5 有工具綁定就照綁定走。**這條路不產生 `docs/` 設計基線**（因為沒有新設計決策）——舊專案要補基線是走下面「需要新設計決策」那條 |
+| 在既有範圍內 | 不涉及新的 DB/API/架構/元件/模組決策，只是既有設計下的具體實作 | Lead-direct 寫輕量 spec + ticket。**測試描述不分 Tier 一律 MUST 有**——依既有需求規格書／程式碼現況基線設計，格式同 `dev-setup` 的測試描述（例：「呼叫 `/api/orders/search` 帶 `status=pending`，應該只回傳待處理的訂單」），**寫在程式碼之前**，給後續驗收用，不是給開發者事後參考；Tier 0-1（改一行 log、調 config 值、修 typo）寫一句話即可，Tier 2 以上（Tier 定義 → `../sdlc-orchestrator/references/agent-teams.md`）逐條列。**MUST 同時涵蓋正向與反向情境，規則與最低涵蓋類別 → `../sdlc-orchestrator/references/test-case-coverage.md`**（Tier 0-1 的一句話也要優先挑反向情境寫，如果這次異動本身就是在補防呆邏輯的話）。**去處**：帶著輕量 spec 進 `implementation-handoff`（Phase 5），**不必**走 `requirement-scoping`／`system-design`／`dev-setup`（Phase 4 是創世模式專用，既有專案的骨架／版控／排程本來就存在）；使用環境的 CLAUDE.md/AGENTS.md 若對 Phase 5 有工具綁定就照綁定走。**這條路不產生 `docs/` 設計基線**（因為沒有新設計決策）——舊專案要補基線是走下面「需要新設計決策」那條 |
 | 需要新設計決策 | 涉及既有設計/程式碼沒涵蓋的 DB schema / API / 架構 / 元件 / 模組異動 | 提醒使用者接著用 `system-design`，明確指出**只需要做哪一個設計面向**（不必重跑全部 11-17，尤其舊專案的整體架構/技術選型是一次性、早已定案不重做）；`system-design` 會把這次的設計-delta 寫進 `docs/design.md`，等於順手替沒文件的舊專案補上基線，下次變更就有得對照 |
 | 其實是新方向 | 跟既有問題陳述/商業目標矛盾，或既有需求規格完全沒提到這個方向 | 提醒使用者接著用 `product-discovery` |
 

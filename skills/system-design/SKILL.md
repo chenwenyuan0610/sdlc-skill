@@ -3,6 +3,8 @@ name: system-design
 description: TRIGGER when ①創世：需求規格書已確認，要做系統架構/資料庫/API/前端元件/模組拆分/任務拆分設計；或②演進：既有專案經 change-request 分診為「需要新設計決策」轉來，只做指定的單一設計面向（此路徑沒有 requirements-spec.md，用程式碼現況當基線，不必先回 requirement-scoping）。DO NOT TRIGGER when 全新專案的需求還沒收斂（→ requirement-scoping）或既有系統的改動不涉及任何新設計決策（→ change-request 分診為「在既有範圍內」，直接進 implementation-handoff）。
 ---
 
+> ⚠️ 修改本檔案前後，MUST 依 `../sdlc-orchestrator/CHANGELOG.md` 的規則記錄異動。
+
 # System Design — SDLC Phase 3 設計
 
 依 `../sdlc-orchestrator/SDLC_主流程版_IAO.md` 步驟 11-17，做系統設計並產出設計文件。
@@ -23,7 +25,7 @@ description: TRIGGER when ①創世：需求規格書已確認，要做系統架
 | 模式 | 完成條件 |
 |---|---|
 | **創世**（全新專案） | 步驟 11-17 的 Output **＋ 步驟 10.5 的架構意圖**，共 8 項全部產出 |
-| **演進**（從 `change-request` 轉來、只做單一設計面向） | **只要三項**：①步驟 10.5 的架構意圖（縮減為一題）②**該指定面向**的 Output ③演進支線的測試描述。其餘面向**不是 N/A、也不是未完成，而是本次不在範圍內**——`change-request` 已明確指定只做哪一個面向，不必逐項標記或找人確認 |
+| **演進**（從 `change-request` 轉來、只做單一設計面向） | **只要四項**：①步驟 10.5 的架構意圖（縮減為一題）②**該指定面向**的 Output ③演進支線的測試描述 ④**REQ-nn 表**（本支線沒有 `requirements-spec.md`，設計文件索引檔第一段就是本次變更的唯一需求真相源，規則與放哪 → `../sdlc-orchestrator/references/traceability.md` 規則二）。其餘面向**不是 N/A、也不是未完成，而是本次不在範圍內**——`change-request` 已明確指定只做哪一個面向，不必逐項標記或找人確認 |
 
 ⚠ 演進模式**不得**要求交出 ER 圖／元件清單／模組劃分才准離開本 phase：只補一個 API 欄位卻要產出整套設計，等於把「只做一個面向」這句話作廢。
 
@@ -94,7 +96,7 @@ description: TRIGGER when ①創世：需求規格書已確認，要做系統架
 ## 停止條件
 - 設計產出跟既有系統慣例衝突 → 停下來跟使用者確認是否要破例
 - 步驟 12 產出的 schema 出現 `FOREIGN KEY`/`REFERENCES` 約束 → 這是違規，改成純 ID 型別 + 欄位說明寫關聯，不要保留約束
-- 步驟 16 拆分任務時發現任務範圍模糊、或發現前面階段（`requirement-scoping`）的產出有問題 → 明確告知使用者要回哪個 phase 重新確認，不要憑空猜著往下做
+- 步驟 16 拆分任務時發現任務範圍模糊、或發現前面階段（`requirement-scoping`）的產出有問題 → 明確告知使用者要回哪個 phase 重新確認，不要憑空猜著往下做；確認要回頭後依 `../sdlc-orchestrator/sdlc-entry.md`「回歸」段回寫狀態（含連鎖回開判斷），不能只在對話裡講一講
 - 涉及設定/機敏資訊管理系統異動、跨環境部署影響、新雲端資源 → 逐項確認風險（機敏資訊管理方式、各環境差異、新資源存取權限）
 - 卡住的原因是**流程規則本身**（規則寫死了不適用本專案的做法／兩條規則矛盾／判準模糊到判不出來／缺一步接不上）→ **不要就地改規則、不要停工**：append 一列到**框架缺陷登記簿**（status=`proposed`，**證據欄必填**）。登記簿位置 → `../sdlc-orchestrator/references/framework-defects.md`；**該檔可能是登記簿本身，也可能是指向使用環境實際登記簿的指標檔，打開照它說的走**，然後用最接近的合理解讀把工作做完
 
@@ -106,4 +108,4 @@ Phase Exit Criteria 全過 → **依模式分兩支**，**不自動呼叫**，�
 | **創世**（全新專案，骨架尚未建立） | `dev-setup`（Phase 4）做開發前準備 |
 | **演進**（既有專案，從 `change-request` 轉來只做單一設計面向的 delta） | **直接進 `implementation-handoff`（Phase 5），不經過 `dev-setup`**——既有專案的骨架／版控／排程本來就存在，Phase 4 對它恆為 N/A |
 
-⚠ **演進支線 MUST 一併產出「測試描述」才算完成。** 這一項原本掛在 `dev-setup`，跳過 Phase 4 時**不隨之消失**：對本次 delta 的每個工作項目，用白話寫「這個功能應該怎麼運作」（例：「呼叫 `/api/orders/search` 帶 `status=pending`，應該只回傳待處理的訂單」），**寫在程式碼之前**，寫進本次的設計 delta 文件裡。依據是**需求／既有行為基線**，**不是照本階段自己的技術方案寫**——照技術方案寫出來的測試只會驗證「程式碼有沒有照設計做」，驗不出「設計本身符不符合需求」。開發完成後 MUST 接 `qa-handoff`（Phase 6），跳過 Phase 3-4 不包含跳過測試。
+⚠ **演進支線 MUST 一併產出「測試描述」才算完成。** 這一項原本掛在 `dev-setup`，跳過 Phase 4 時**不隨之消失**：對本次 delta 的每個工作項目，用白話寫「這個功能應該怎麼運作」（例：「呼叫 `/api/orders/search` 帶 `status=pending`，應該只回傳待處理的訂單」），**寫在程式碼之前**，寫進本次的設計 delta 文件裡。依據是**需求／既有行為基線**，**不是照本階段自己的技術方案寫**——照技術方案寫出來的測試只會驗證「程式碼有沒有照設計做」，驗不出「設計本身符不符合需求」。**MUST 同時涵蓋正向與反向情境，規則與最低涵蓋類別 → `../sdlc-orchestrator/references/test-case-coverage.md`**——只寫正向案例視為本項未完成。每條測試描述 **MUST 掛上它驗證的 `[REQ-nn]`**（REQ-nn 表放哪 → `../sdlc-orchestrator/references/traceability.md` 規則二），不是自由文字散寫；沒有 REQ-nn 可掛代表該條需求本身還沒編號，先回頭補進 REQ-nn 表再繼續寫測試描述。開發完成後 MUST 接 `qa-handoff`（Phase 6），跳過 Phase 3-4 不包含跳過測試。

@@ -3,6 +3,8 @@ name: dev-setup
 description: TRIGGER when 創世模式（全新專案）的設計文件已確認，要建立專案骨架、設定版控規則、排開發排程。DO NOT TRIGGER when 設計還沒定案（→ system-design）；或這是既有專案的增量變更（演進模式）——骨架/版控/排程本來就存在，本 phase 對它恆為 N/A，改由 change-request 或 system-design 產出測試描述後直接進 implementation-handoff。
 ---
 
+> ⚠️ 修改本檔案前後，MUST 依 `../sdlc-orchestrator/CHANGELOG.md` 的規則記錄異動。
+
 # Dev Setup — SDLC Phase 4 開發前準備
 
 依 `../sdlc-orchestrator/SDLC_主流程版_IAO.md` 步驟 18-20。**Lead-direct，版控步驟只能列清單，不自動執行。**
@@ -58,13 +60,13 @@ description: TRIGGER when 創世模式（全新專案）的設計文件已確認
 - Output：開發排程（依任務清單粗估，不用精確到工時）
 
 ### 附加產出：測試描述（掛在步驟 20 之後，不是獨立編號步驟）
-- Action：對任務清單裡每個項目，用白話文寫「這個功能應該怎麼運作」——**依據 `requirements-spec.md` 需求規格書設計，不是照 `system-design` 的技術方案寫**（技術細節如 API 路徑、欄位名稱才對照 `system-design` 填進去）。例如「呼叫 `/api/orders/search` 帶 `status=pending`，應該只回傳待處理的訂單」。這段話寫在程式碼之前，是給 `qa-handoff` 撰寫真正測試的依據草稿，不是給開發者自己參考用——就算開發者事後看過自己的 code 才補測試，也不會把「code 現在的行為」誤當成「應該有的行為」
+- Action：對任務清單裡每個項目，用白話文寫「這個功能應該怎麼運作」——**依據 `requirements-spec.md` 需求規格書設計，不是照 `system-design` 的技術方案寫**（技術細節如 API 路徑、欄位名稱才對照 `system-design` 填進去）。例如「呼叫 `/api/orders/search` 帶 `status=pending`，應該只回傳待處理的訂單」。這段話寫在程式碼之前，是給 `qa-handoff` 撰寫真正測試的依據草稿，不是給開發者自己參考用——就算開發者事後看過自己的 code 才補測試，也不會把「code 現在的行為」誤當成「應該有的行為」。**MUST 同時涵蓋正向與反向情境（含綠地專案的紅軍測試），規則與最低涵蓋類別 → `../sdlc-orchestrator/references/test-case-coverage.md`**——只寫正向案例視為本項未完成
 - 誰做：Lead + 使用者；**過目審查依 Tier 分級**（Tier 定義 → `../sdlc-orchestrator/references/agent-teams.md`）：Tier 0-1（單檔小改動）Lead 自己看過即可；Tier 2-3（安全/共用資料/多模組）MUST 給使用者看過確認才能落地成後續測試依據
-- Output：自然語言測試描述（依任務清單項目逐條列，草稿性質，`qa-handoff` 會再對照 `requirements-spec.md` 覆核後才寫成真正的測試）
+- Output：自然語言測試描述（依任務清單項目逐條列，草稿性質，正向+反向情境皆須涵蓋，`qa-handoff` 會再對照 `requirements-spec.md` 覆核後才寫成真正的測試）
 
 ## 停止條件
 - 使用者要求 Lead 直接建分支/push → 拒絕，這是版控安全紅線，改列清單交給使用者自己做
-- 發現前面階段（`system-design`）的產出有問題（例如設計文件缺任務清單、範圍不清）→ 明確告知使用者要回 `system-design` 重新確認，不要在已知有問題的情況下把骨架/排程做完
+- 發現前面階段（`system-design`）的產出有問題（例如設計文件缺任務清單、範圍不清）→ 明確告知使用者要回 `system-design` 重新確認，不要在已知有問題的情況下把骨架/排程做完；確認要回頭後依 `../sdlc-orchestrator/sdlc-entry.md`「回歸」段回寫狀態（含連鎖回開判斷），不能只在對話裡講一講
 - 卡住的原因是**流程規則本身**（規則寫死了不適用本專案的做法／兩條規則矛盾／判準模糊到判不出來／缺一步接不上）→ **不要就地改規則、不要停工**：append 一列到**框架缺陷登記簿**（status=`proposed`，**證據欄必填**）。登記簿位置 → `../sdlc-orchestrator/references/framework-defects.md`；**該檔可能是登記簿本身，也可能是指向使用環境實際登記簿的指標檔，打開照它說的走**，然後用最接近的合理解讀把工作做完
 - **同一個技術問題連續失敗**（工具鏈／相依／環境裝不起來這類）→ **第 2 次失敗改為查證來源，第 3 次仍不通就停手**，不得繼續重試。判準是「**它擋不擋得住 Exit Criteria 的某一項**」——擋不住就不是本 phase 該解的，寫進 `docs/dev-setup.md` 的已知限制往下走；真的擋住才升級成阻塞問題並回報。⚠ 本條的存在理由：本 phase 是 Lead-direct，沒有 agent 派工的停損機制接手，**不明文寫就等於沒有停損**；使用環境另有更嚴格的停損規則時以更嚴格者為準
 

@@ -3,6 +3,8 @@ name: release-handoff
 description: TRIGGER when 測試通過，要確認可以部署（對應原 SDLC 步驟29-32：部署前檢查/staging/production/煙霧測試）。DO NOT TRIGGER when 測試還沒過（→ qa-handoff）。部署動作一律人工手動觸發，Claude 不自動化。
 ---
 
+> ⚠️ 修改本檔案前後，MUST 依 `../sdlc-orchestrator/CHANGELOG.md` 的規則記錄異動。
+
 # Release Handoff — SDLC Phase 7 部署
 
 依 `../sdlc-orchestrator/SDLC_主流程版_IAO.md` 步驟 29-32。**Lead 只負責檢查清單與唯讀驗證，實際部署動作 MUST 由使用者手動觸發**（不可越過的安全紅線）。
@@ -51,11 +53,11 @@ description: TRIGGER when 測試通過，要確認可以部署（對應原 SDLC 
 - Action：快速測核心功能是否活著
 - 誰做：Lead 可協助執行唯讀檢查（健康檢查端點、關鍵頁面回應等），不涉及任何寫入/部署動作
 - Output：煙霧測試結果（綠燈/退版）
-- ⚠ **只有綠燈才可以把 `## Phase 7` 寫成 `狀態：完成`。** 判定退版時：分節維持 `狀態：進行中`，記下退版原因與退到哪個版本，**然後回 `implementation-handoff`（Phase 5）修**，修完重走 Phase 6、Phase 7。**NEVER 把退版寫成完成**——退版代表功能沒上線、問題還在，寫成完成之後下一次定位會判「Phase 7 已完成」而進入維運，把一個失敗的發布當成上線中的產品在監控。
+- ⚠ **只有綠燈才可以把 `## Phase 7` 寫成 `狀態：完成`。** 判定退版時：分節維持 `狀態：進行中`，記下退版原因與退到哪個版本，**然後回 `implementation-handoff`（Phase 5）修**，修完重走 Phase 6、Phase 7——**這是「回歸」的一個特例，通用規則（含 Phase 5／6 分節是否要一併回開）→ `../sdlc-orchestrator/sdlc-entry.md`「回歸」段**，本條只講煙霧測試退版這個具體情境不重複定義通則。**NEVER 把退版寫成完成**——退版代表功能沒上線、問題還在，寫成完成之後下一次定位會判「Phase 7 已完成」而進入維運，把一個失敗的發布當成上線中的產品在監控。
 
 ## 停止條件
 - 使用者要求 Lead 直接觸發部署 → 拒絕，這是人工手動觸發的範圍，Lead 只能協助檢查
-- 部署前檢查發現前面階段（`qa-handoff`）的產出有問題 → 明確告知使用者要回 `qa-handoff` 重新確認，不要在已知有問題的情況下放行部署
+- 部署前檢查發現前面階段（`qa-handoff`）的產出有問題 → 明確告知使用者要回 `qa-handoff` 重新確認，不要在已知有問題的情況下放行部署；確認要回頭後依 `../sdlc-orchestrator/sdlc-entry.md`「回歸」段回寫狀態（含連鎖回開判斷），不能只在對話裡講一講
 - 卡住的原因是**流程規則本身**（規則寫死了不適用本專案的做法／兩條規則矛盾／判準模糊到判不出來／缺一步接不上）→ **不要就地改規則、不要停工**：append 一列到**框架缺陷登記簿**（status=`proposed`，**證據欄必填**）。登記簿位置 → `../sdlc-orchestrator/references/framework-defects.md`；**該檔可能是登記簿本身，也可能是指向使用環境實際登記簿的指標檔，打開照它說的走**，然後用最接近的合理解讀把工作做完
 
 ## 下一步

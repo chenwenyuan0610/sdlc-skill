@@ -3,6 +3,8 @@ name: converge
 description: TRIGGER when 問題本身還不明確——不確定是新構想還是既有系統的問題、bug 不知道 root cause 或詳細需求在哪、還沒決定要不要做。DO NOT TRIGGER when 問題已經明確 → 直接進 product-discovery/change-request/對應開發流程；或問題已明確但技術根因不明 → debug（root cause 調查是 debug 既有工作，不重複造）。
 ---
 
+> ⚠️ 修改本檔案前後，MUST 依 `../sdlc-orchestrator/CHANGELOG.md` 的規則記錄異動。
+
 # Converge — 需求收斂前哨站（Pipeline 外，不計入 9 份 SDLC skill 編制）
 
 不管是新構想還是 bug，先進本流程討論「問題是什麼、要不要做」，講清楚才分流到 `product-discovery`/`change-request`/`debug`。比照 `debug` 的既有前例，本流程不是 SDLC 8 階段裡的一個 phase，只在需求不明確、需要討論時才會被觸發，不是每次任務都會經過的固定編制。

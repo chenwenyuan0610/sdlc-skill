@@ -1,5 +1,7 @@
 # Agent Teams — SDLC 派工分級（領域中立）
 
+> ⚠️ 修改本檔案前後，MUST 依 `../CHANGELOG.md` 的規則記錄異動。
+
 用途：`implementation-handoff`/`qa-handoff`/`system-design` 決定「這件事該 Lead 自己做、派一個 agent、還是派一組平行 agent」時查這份文件。角色定義檔 `sdlc-implementer.md`／`sdlc-reviewer.md`／`sdlc-verifier.md`，安裝在你選定的**角色檔目錄**下（不綁定任何特定技術棧）。
 
 ## 角色檔對應

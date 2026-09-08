@@ -3,6 +3,8 @@ name: requirement-scoping
 description: TRIGGER when 已有可行方案（來自 product-discovery 或使用者直接提供），要收斂成具體功能清單、劃定範圍、排優先序、寫需求規格、盤點風險。DO NOT TRIGGER when 需求都還沒發想（→ product-discovery）或已經是明確規格要直接開發（→ 使用環境既有的功能開發流程）。
 ---
 
+> ⚠️ 修改本檔案前後，MUST 依 `../sdlc-orchestrator/CHANGELOG.md` 的規則記錄異動。
+
 # Requirement Scoping — SDLC Phase 2 需求分析
 
 依 `../sdlc-orchestrator/SDLC_主流程版_IAO.md` 步驟 6-10，把「可行方案」收斂成正式需求規格書。**對話式引導，Lead + 使用者共同拍板，不派 agent 執行**（步驟10可選派風險掃描）。
@@ -53,7 +55,7 @@ description: TRIGGER when 已有可行方案（來自 product-discovery 或使�
 - Output：排序後功能清單
 
 ### 步驟 9：撰寫需求規格文件
-- Action：把每個功能寫成正式規格（細節、規則）。**同時發需求編號**——一條需求一個 `REQ-nn`，流水、不補洞、不重用，且**與工單號分開兩套**（工單會被合併關閉重開，需求不會；混用的話第一次工單合併就對不上帳）。完整規則 → `../sdlc-orchestrator/references/traceability.md`
+- Action：把每個功能寫成正式規格（細節、規則）。**同時發需求編號**——一條需求一個 `REQ-nn`，流水、不補洞、不重用，且**與工單號分開兩套**（工單會被合併關閉重開，需求不會；混用的話第一次工單合併就對不上帳）。**一條 `REQ-nn` 若包含多條可獨立驗證的業務規則/情境（例如「登入功能」底下「帳號不存在顯示錯誤」「密碼錯誤顯示錯誤」「連續失敗鎖帳號」），MUST 逐條列出並各自編號**（`REQ-nn-AC1`、`REQ-nn-AC2`……，同一 `REQ-nn` 底下依序、不補洞、不重用）；只有單一情境時不需要編號，`REQ-nn` 本身即可。**判準（這條規則算不算獨立情境）**：把這條規則整句拿掉，剩下的描述還能不能單獨判斷「做對了沒有」——能，就是獨立情境該拆；拿掉後只是少了補充說明或例外處理細節、不影響能不能判定對錯，就不用拆。**卡在拆或不拆之間時傾向拆**：拆多了的代價可回收（事後發現太細，兩條 AC 的內容可以在描述裡整合說明「這兩點視為同一情境驗證」，不需要刪號）；漏拆的代價是實際的測試覆蓋缺口，不可回收。完整規則（含 AC 引用格式、拆分子編號的回歸情境）→ `../sdlc-orchestrator/references/traceability.md`
 - 誰做：Lead 撰寫，使用者審閱確認
 - Output：需求規格書（含 `REQ-nn` 對照表）
 
@@ -64,7 +66,7 @@ description: TRIGGER when 已有可行方案（來自 product-discovery 或使�
 
 ## 停止條件
 - 範圍界定卡住（使用者一直想擴大範圍）→ 提醒 scope creep 風險，但範圍決定權仍在使用者
-- 發現前面階段（`product-discovery`）的產出有問題，例如需求規格書寫到一半發現跟原始問題陳述矛盾 → 明確告知使用者要回 `product-discovery` 重新確認，不要在已知有問題的情況下把需求規格書硬寫完
+- 發現前面階段（`product-discovery`）的產出有問題，例如需求規格書寫到一半發現跟原始問題陳述矛盾 → 明確告知使用者要回 `product-discovery` 重新確認，不要在已知有問題的情況下把需求規格書硬寫完；確認要回頭後依 `../sdlc-orchestrator/sdlc-entry.md`「回歸」段回寫狀態（含連鎖回開判斷），不能只在對話裡講一講
 - 卡住的原因是**流程規則本身**（規則寫死了不適用本專案的做法／兩條規則矛盾／判準模糊到判不出來／缺一步接不上）→ **不要就地改規則、不要停工**：append 一列到**框架缺陷登記簿**（status=`proposed`，**證據欄必填**）。登記簿位置 → `../sdlc-orchestrator/references/framework-defects.md`；**該檔可能是登記簿本身，也可能是指向使用環境實際登記簿的指標檔，打開照它說的走**，然後用最接近的合理解讀把工作做完
 
 ## 下一步
