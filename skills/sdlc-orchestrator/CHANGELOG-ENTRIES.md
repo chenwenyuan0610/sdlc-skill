@@ -13,7 +13,7 @@
 | `SKC-20260814-03` | 規則調整（新增機制） | 建立「回歸」通用規則（`sdlc-entry.md`）：區分回歸與普通bug、狀態回寫、連鎖回開（含例外論證要求）、跟框架缺陷的界線；`traceability.md` 補內容修正規則；12 份檔案同步 | 已落地 |
 | `SKC-20260814-04` | 規則調整（補顆粒度，分兩步完成） | `REQ-nn` 補驗收標準子編號機制（`REQ-nn-AC1`/`AC2`……）；步驟二修正 grep pattern 過期、補拆分判準、補回歸情境下的舊引用處理、補 reviewer/verifier 涵蓋 | 已落地 |
 | `SKC-20260815-01` | 規則調整（新增機制） | `implementation-handoff`（Phase 5）完成條件新增第5項橫切檢查：測試所需的資料/帳號/外部相依 MUST 主動盤點並備妥或回報缺口，不再只靠 Phase 6 跑到一半才發現的 `BLOCKED`；`sdlc-implementer`/`sdlc-reviewer`/`sdlc-verifier` 三個角色檔同步補對應檢查項 | 已落地 |
-| `SKC-20260908-01` | 規則調整（改寫） | `DESIGN.md` 的 Entry Protocol 區塊（＝`install.py` 貼進使用環境 `CLAUDE.md` 的那段）由條列改寫為定位表，補上 Phase 1-8 階段名與原步驟編號；43 行縮到 32 行，承重判定一條未減 | 已落地 |
+| `SKC-20260908-01` | 規則調整（改寫，分兩步完成） | `DESIGN.md` 的 Entry Protocol 區塊（＝`install.py` 貼進使用環境 `CLAUDE.md` 的那段）由條列改寫為定位表，補上 Phase 1-8 階段名與原步驟編號（43 → 32 行，承重判定一條未減）；步驟二修正舊版就存在、窮舉才抓到的 Phase 4 路由洞（`dev-setup` 那列條件寫反且被上一列吃掉，永遠命中不到）＋三處可讀性 | 已落地 |
 | `SKC-20260815-02` | 規則調整（新增規則檔案） | 新增 `references/tooling-reuse.md`：專案文件（不含skill包自身）裡重複性機械檢查優先寫成可重跑腳本、省 LLM 重新推導 token 的 MAY 原則，含跟 `sdlc-entry.md`「治理保證不得只靠腳本」的分工、`framework-defects.md` 登記簿資料列的邊界判準；`qa-handoff`/`ticket-spec.md`/`framework-defects.md`/`CHANGELOG.md` 同步引用/更新 | 已落地 |
 
 ---
@@ -279,7 +279,34 @@
     ✅ 1 需求發想  ✅ 2 需求分析  ✅ 3 設計      ✅ 4 開發前準備
     ✅ 5 開發實作  ✅ 6 測試      ✅ 7 部署      ✅ 8 維運
 
-14 條承重判定逐條命中、8 個階段名全部新增、行數 43 → 32。已用 `inject_entry_protocol()` 相同的組裝與接合方式回寫測試安裝副本 `/Users/waynechen/_test/CLAUDE.md`（49 行 → 38 行，含 BEGIN/END 標記與 H2 標題），改寫前先留 `CLAUDE.md.bak-<時戳>`。
+14 條承重判定逐條命中、8 個階段名全部新增、行數 43 → 32。已用 `inject_entry_protocol()` 相同的組裝與接合方式回寫測試安裝副本 `/Users/waynechen/_test/CLAUDE.md`（49 行 → 38 行，含 BEGIN/END 標記與 H2 標題）。
+
+### 步驟二：修正 Phase 4 路由洞（步驟一漏抓，非步驟一造成）
+
+改成表格之後對 `_test` 做安裝後驗收，把 11 列條件照字面編碼、窮舉所有 `docs/` 狀態組合跑一次，發現 **第 9 列（Phase 4 開發前準備 → `dev-setup`）在所有組合下都命中不到**。兩個原因疊加：
+
+1. **條件寫反**：入口寫「**有** dev-setup.md 但骨架還沒建起來」，但 `dev-setup` 這一關的產出物就是 `dev-setup.md`——等於要求先有產物才准去生產物。同一包另外兩處寫的都是相反的：`claude_sdlc.md:27`「有設計文件、**無** dev-setup.md，且骨架尚未建立」、本檔 `DESIGN.md:203` 自己記載的白紙測試結果「正確判定 Phase 4（有設計文件、**缺** dev-setup.md）並進 `dev-setup`」。
+2. **順序被上一列吃掉**：第 6 列（→ `implementation-handoff`）條件是「無 `## Phase 5` 分節 **且** 有 dev-setup.md」。原第 9 列要求「有 dev-setup.md」，只有在「已存在 `## Phase 5` 分節」時才輪得到；但那時分節狀態必為「進行中」或「完成」，第 2 列或第 5 列早已先命中。
+
+**實際後果**：創世專案設計做完、還沒做開發前準備時，前 9 列全部落空，掉到第 10 列被送回 Phase 1 重做需求發想。
+
+**這個洞是舊版就有的**——舊版條列同樣寫「有 docs/dev-setup.md 但骨架還沒建起來」，步驟一改寫時原文照抄，沒有加大也沒有縮小它，是步驟二的驗收才抓到。
+
+修法：條件改為「**設計文件已齊，但沒有 dev-setup.md，且骨架尚未建立**」，並依「越後面的階段排越前面」把該列從第 9 位移到第 7 位（Phase 5 之後、Phase 3 之前）——原位置在 Phase 2 之後，本身就違反該原則。
+
+同批處理的三處可讀性問題：①`rule-eval` 是入口裡唯一沒加反引號的 skill 名，補上，12 個 skill 名寫法一致；②Phase 5 那列三個 OR 條件擠成全表最長的一格，壓成「有 dev-setup.md（創世）或 change-specs/ 輕量規格或 design-delta（演進，經 change-request 分診）」；③Phase 欄原本混了數字階段、「流程外」、「該分節那一關」三種東西，後兩者改成 `—`，說明移進第三欄。
+
+### 步驟二證據
+
+修正前後各跑一次窮舉（15 個 `docs/` 狀態布林、排除「分節存在但無狀態」等不可能組合）：
+
+    修正前： 永遠命中不到的列： ['9']
+    修正後： 永遠命中不到的列： 無
+             1 converge 7680 / 2 續作該關 4608 / 3 ops-feedback 2304 / 4 release-handoff 384
+             5 qa-handoff 192 / 6 implementation-handoff 168 / 7 dev-setup(Phase 4) 4
+             8 system-design 8 / 9 requirement-scoping 4 / 10 product-discovery 4 / 11 change-request 4
+
+`DESIGN.md:203` 白紙測試那個情境（有設計文件、缺 dev-setup.md、骨架未建）重跑 → 命中 `dev-setup`，與該行記載的預期一致。`python3 -m unittest discover -s tests` → 40 tests OK。路由順序索引 ops-feedback 4 → release-handoff 5 → qa-handoff 6 → implementation-handoff 7 → system-design 8 → requirement-scoping 10，嚴格遞增；「狀態：進行中」在第 3 列（最小）。反引號一致性檢查：12 個 skill 名皆已加，未加者 0。
 
 ### 已知待辦
 - `claude_sdlc.md` 開頭原本寫「`install.py` 預設貼的是 Entry Protocol 純文字版；想改用這份表格版……」，本票之後兩邊都是表格、那句話會變成假的，已一併改成「加詳版 vs 精簡版」的區分。該檔不在本機制範圍內（`CHANGELOG.md` 明文排除），此處僅記其連帶更動。

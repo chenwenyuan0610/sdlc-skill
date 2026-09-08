@@ -155,15 +155,15 @@
 
 | 條件（看 docs/） | Phase（原步驟） | 讀哪個 skill |
 |---|---|---|
-| 問題本身還講不清楚：不知是新構想還是既有系統的問題／bug 不知根因或需求在哪／還沒決定要不要做。**此列優先於以下全部，包含 docs/ 已有東西的情況** | 流程外 | `converge` — 純討論，MUST NOT 改 code／DB；講清楚後回本表重判 |
-| handoff-log.md 任一分節第一行是「狀態：進行中」 | 該分節那一關 | 該 Phase 的 skill，續作 |
+| 問題本身還講不清楚：不知是新構想還是既有系統的問題／bug 不知根因或需求在哪／還沒決定要不要做。**此列優先於以下全部，包含 docs/ 已有東西的情況** | — | `converge`（流程外）— 純討論，MUST NOT 改 code／DB；講清楚後回本表重判 |
+| handoff-log.md 任一分節第一行是「狀態：進行中」 | — | 回該分節那一關的 skill 續作 |
 | handoff-log.md 有「## Phase 7」且完成，或系統已上線 | 8 維運（33-35） | `ops-feedback` |
 | 有「## Phase 6」且完成，無 Phase 7 | 7 部署（29-32） | `release-handoff` |
 | 有「## Phase 5」且完成，無 Phase 6 | 6 測試（25-28） | `qa-handoff` |
-| 無「## Phase 5」，且下列任一成立：有 dev-setup.md（創世走完準備）／有 change-specs/ 輕量規格（經 change-request 分診）／有本次變更的單一面向設計文件（design-delta，經 change-request 轉設計後產出） | 5 開發實作（21-24） | `implementation-handoff` |
+| 無「## Phase 5」，且有 dev-setup.md（創世）或 change-specs/ 輕量規格或 design-delta（演進，經 change-request 分診） | 5 開發實作（21-24） | `implementation-handoff` |
+| **設計文件已齊，但沒有 dev-setup.md，且骨架尚未建立** | 4 開發前準備（18-20） | `dev-setup` — **限創世**；既有專案不走這關（骨架／版控／排程本來就存在），其唯一不能丟的「測試描述」改由 `change-request` 或 `system-design` 產出 |
 | 有 requirements-spec.md，設計文件未齊（判定見下） | 3 設計（11-17） | `system-design` |
 | 有 product-discovery.md，無 requirements-spec.md | 2 需求分析（6-10） | `requirement-scoping` |
-| 有 dev-setup.md 但骨架還沒建起來 | 4 開發前準備（18-20） | `dev-setup` — **限創世**；既有專案不走這關（骨架／版控／排程本來就存在），其唯一不能丟的「測試描述」改由 change-request 或 system-design 產出 |
 | 以上皆不命中 ＋ 全新構想、還沒有任何程式碼 | 1 需求發想（1-5） | 問題／使用者／方案任一不確定 → `product-discovery`。三者都明確而想直接動手也可以，但那等於自願跳過需求與設計、不留 docs/ 產出物 |
 | 以上皆不命中 ＋ 已有在跑的既有程式碼（老專案採用這套流程，只是還沒補 docs/） | 跨 phase | **不要當成新專案。** 瑣碎小改直接動手；需要新設計決策或範圍不確定 → `change-request`（用程式碼現況當基線分診）。這次是修 bug 就先讀 `bug-fix`，它不是另一條流程，只是講清楚修 bug 特有的前置動作（怎麼重現、先寫一個會失敗的測試、找同類），然後把你接回 change-request 與後面的階段 |
 
@@ -174,7 +174,7 @@
 - **標頭存在 ≠ 做完。** 每個「## Phase N」分節第一行必須是「狀態：進行中」或「狀態：完成」，照那一行判，不照標頭判。
 - **判「這個專案在不在流程裡」只看 docs/product-discovery.md 這一個檔。** requirements-spec.md、design.md、architecture.md、dev-setup.md、handoff-log.md、change-log.md、change-specs/、converge-summary.md、feedback-log.md 這些，既有系統做增量變更時也會產生，拿它們判會把老專案誤送 Phase 1。
 - **既往不溯。** 可以改舊程式，但只改本次必要的部分；測試只涵蓋本次變更及其直接受影響的行為，不替未修改、與本次無關的舊程式碼補測試。跳過 Phase 3-4 跳掉的是設計與開發前準備，**不包含本次變更的驗證**。
-- **完成任一關後回本表重判下一步**，不要憑對話印象直接續做。改動這套規則本身之後（改規則，不是改產品）→ 讀 rule-eval 驗它有沒有真的生效；那是驗規則的方法，不是工作路由，所以不在上表順序裡。
+- **完成任一關後回本表重判下一步**，不要憑對話印象直接續做。改動這套規則本身之後（改規則，不是改產品）→ 讀 `rule-eval` 驗它有沒有真的生效；那是驗規則的方法，不是工作路由，所以不在上表順序裡。
 ```
 
 
