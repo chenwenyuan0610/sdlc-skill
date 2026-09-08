@@ -13,6 +13,7 @@
 | `SKC-20260814-03` | 規則調整（新增機制） | 建立「回歸」通用規則（`sdlc-entry.md`）：區分回歸與普通bug、狀態回寫、連鎖回開（含例外論證要求）、跟框架缺陷的界線；`traceability.md` 補內容修正規則；12 份檔案同步 | 已落地 |
 | `SKC-20260814-04` | 規則調整（補顆粒度，分兩步完成） | `REQ-nn` 補驗收標準子編號機制（`REQ-nn-AC1`/`AC2`……）；步驟二修正 grep pattern 過期、補拆分判準、補回歸情境下的舊引用處理、補 reviewer/verifier 涵蓋 | 已落地 |
 | `SKC-20260815-01` | 規則調整（新增機制） | `implementation-handoff`（Phase 5）完成條件新增第5項橫切檢查：測試所需的資料/帳號/外部相依 MUST 主動盤點並備妥或回報缺口，不再只靠 Phase 6 跑到一半才發現的 `BLOCKED`；`sdlc-implementer`/`sdlc-reviewer`/`sdlc-verifier` 三個角色檔同步補對應檢查項 | 已落地 |
+| `SKC-20260908-01` | 規則調整（改寫） | `DESIGN.md` 的 Entry Protocol 區塊（＝`install.py` 貼進使用環境 `CLAUDE.md` 的那段）由條列改寫為定位表，補上 Phase 1-8 階段名與原步驟編號；43 行縮到 32 行，承重判定一條未減 | 已落地 |
 | `SKC-20260815-02` | 規則調整（新增規則檔案） | 新增 `references/tooling-reuse.md`：專案文件（不含skill包自身）裡重複性機械檢查優先寫成可重跑腳本、省 LLM 重新推導 token 的 MAY 原則，含跟 `sdlc-entry.md`「治理保證不得只靠腳本」的分工、`framework-defects.md` 登記簿資料列的邊界判準；`qa-handoff`/`ticket-spec.md`/`framework-defects.md`/`CHANGELOG.md` 同步引用/更新 | 已落地 |
 
 ---
@@ -230,3 +231,58 @@
 - 只挑了 `qa-handoff` 步驟27、`ticket-spec.md`兩條、`framework-defects.md`一條做示範連結，`severity-format.md`的四種狀態值段落、多份`SKILL.md`裡的`handoff-log`固定標頭段落，沒有逐一補上反向指回 `tooling-reuse.md` 的連結——這幾處在 `tooling-reuse.md` 自己的清單裡已經有描述，缺的是反向連結，決定不在本票一併做，避免範圍蔓延
 - `docs/` 長度治理段落逐字重複出現在多份 `SKILL.md`，這次沒有逐一補上引用——那是既有的內容重複（DRY）問題，範圍比這張票大，決定不在本票一併處理
 - 本次異動皆為 working tree 修改，尚未 commit（先前的 `839a8e1` 已由使用者 revert，git 歷史上不會留下那次不完整的commit）
+
+---
+
+## SKC-20260908-01
+
+- 時間戳：2026-09-08
+- 類別：規則調整（改寫）
+- 項目：`DESIGN.md` 的 Entry Protocol 圍籬區塊改寫為定位表，補上 Phase 1-8 階段名與原步驟編號
+- 狀態：已落地
+- 觸發原因：`install.py` 只抽 `DESIGN.md` 裡 `### Entry Protocol` 那一個圍籬區塊貼進使用環境的 `CLAUDE.md`（`extract_entry_protocol()`，靠標題文字定位）。該區塊只寫路由條件，DESIGN.md 另一張「Phase → Skill 對應」表（含 Phase 1-8 與步驟 1-35）不在圍籬內，永遠不會被貼出去。結果是裝好之後的 `CLAUDE.md` 只出現 Phase 5／6／7 三個字串（而且只當 `handoff-log.md` 的分節標頭在用），Phase 1-4 零提及、「步驟」零出現——讀那份檔的人或 agent 看不出這條流程總共有 8 關。這一段是承重的：13 份 SKILL.md 的 `description` 只能讓 Claude 觸發到「某一支 skill」，判斷「現在在第幾關」必須讀 `docs/handoff-log.md`，那正是這段入口的工作；Codex 端更沒有 description 自動配對（本檔第九輪已載明），完全依賴這段文字。
+
+### 異動內容
+
+`DESIGN.md` 第 145-189 行的圍籬區塊，整段改寫。
+
+原文（節錄，條列式，只出現 Phase 5/6/7）：
+
+- docs/handoff-log.md 有「## Phase 7」而且那一節是「狀態：完成」，或系統已經上線 → 讀 ops-feedback，照做。
+- docs/handoff-log.md 有「## Phase 6」而且那一節是「狀態：完成」，但沒有「## Phase 7」→ 讀 release-handoff，照做。
+
+新文（節錄，表格式，Phase 名與原步驟編號入表）：
+
+| 條件（看 docs/） | Phase（原步驟） | 讀哪個 skill |
+|---|---|---|
+| handoff-log.md 有「## Phase 7」且完成，或系統已上線 | 8 維運（33-35） | `ops-feedback` |
+| 有「## Phase 6」且完成，無 Phase 7 | 7 部署（29-32） | `release-handoff` |
+
+其餘結構性調整：①開頭「先確認有沒有 docs/ 資料夾」改為「先看 docs/ 實際有哪些檔」，與檔尾原本重複的同義句合併，省一段；②四條散落的 ⚠ 提醒（標頭≠做完／只看 product-discovery.md／既往不溯／改完回本表重判＋rule-eval）收攏成「四條硬規則」一節；③「設計文件未齊」的三項判定從表格列裡抽成表後註腳，避免撐爆欄寬。`{{SKILLS_ROOT}}`／`{{AGENTS_ROOT}}` 兩個佔位符保留（`render_entry_protocol()` 缺任一個會丟 `ValueError`）。
+
+### 證據
+
+`python3 -c` 直接呼叫 `install.extract_entry_protocol()` 與 `install.render_entry_protocol()` 的輸出：
+
+    抽取成功: True
+    新版行數: 32 （舊版 43）
+    佔位符替換 OK: True
+
+    === 承重規則保留檢查 ===
+    ✅ converge 優先        ✅ 狀態：進行中          ✅ Phase 7 → ops-feedback
+    ✅ Phase 6 → release-handoff   ✅ Phase 5 → qa-handoff   ✅ change-specs 入場
+    ✅ 設計完成三判定        ✅ dev-setup 限創世      ✅ 只看 product-discovery.md
+    ✅ 既往不溯              ✅ sdlc-mode/tailoring   ✅ rule-eval
+    ✅ bug-fix               ✅ 標頭≠做完
+
+    === 新增的（舊版沒有）===
+    ✅ 1 需求發想  ✅ 2 需求分析  ✅ 3 設計      ✅ 4 開發前準備
+    ✅ 5 開發實作  ✅ 6 測試      ✅ 7 部署      ✅ 8 維運
+
+14 條承重判定逐條命中、8 個階段名全部新增、行數 43 → 32。已用 `inject_entry_protocol()` 相同的組裝與接合方式回寫測試安裝副本 `/Users/waynechen/_test/CLAUDE.md`（49 行 → 38 行，含 BEGIN/END 標記與 H2 標題），改寫前先留 `CLAUDE.md.bak-<時戳>`。
+
+### 已知待辦
+- `claude_sdlc.md` 開頭原本寫「`install.py` 預設貼的是 Entry Protocol 純文字版；想改用這份表格版……」，本票之後兩邊都是表格、那句話會變成假的，已一併改成「加詳版 vs 精簡版」的區分。該檔不在本機制範圍內（`CHANGELOG.md` 明文排除），此處僅記其連帶更動。
+- `tests/test_install.py` 的 `EntryProtocolRoutingTests.entry_lines()` 原本只認 `- ` 開頭的條列列，表格列 `| … |` 認不到而誤報「入口文字沒有任何一條規則指向 ops-feedback」。已放寬為同時認兩種格式——這三個測試守的是 first-hit-wins 的比對順序，跟排版無關。放寬後以「在圍籬區塊內對調 `ops-feedback` 與 `requirement-scoping` 兩列」反向驗證，測試確實報 `ops-feedback 必須排在 release-handoff 之前`，還原後 40 tests OK，不變式沒有被鬆掉。
+- Phase 5 那一列原本寫「經 change-request → system-design」，字串 `system-design` 使 `first_index()` 把該列同時算成「指向 system-design 的規則」，兩個階段索引相同而測試失敗。改用本包既有詞彙 `design-delta` 指稱那份產出物，語意不變。
+- 本包目前有兩份內容不重疊的 `CHANGELOG-ENTRIES.md`（本檔含 `SKC-20260814-*`／`SKC-20260815-*`，`references/CHANGELOG-ENTRIES.md` 含 `SKC-20260818-*`），兩份在同一個 commit 落地。`CHANGELOG.md` 的「寫在哪」只寫檔名不寫路徑，字面解讀指向同層的本檔，故本票記在本檔。合併與否未決，未在本票處理。

@@ -143,49 +143,38 @@
 ### Entry Protocol（可直接複製進任何團隊自己的 `CLAUDE.md` 或 `AGENTS.md`）
 
 ```
-先確認你要動的那個程式專案有沒有 docs/ 資料夾，再照下面判斷這件事該從哪裡開始。
+定位這件工作該從哪一關開始：先看那個程式專案的 docs/ 實際有哪些檔，不要憑對話印象判斷。
 
-⚠ 規則由上而下逐條檢查，第一條命中就採用，不再往下看。
-⚠ 順序是刻意的：**越後面的階段排越前面**。這樣做完一個階段回來重判時，會往前走，不會被前面某個「一直都成立」的條件吸回去。
-下面只寫 skill 名稱，實際位置是：
+  skill → {{SKILLS_ROOT}}/<名稱>/SKILL.md　　角色檔 → {{AGENTS_ROOT}}/
 
-  skill  →  {{SKILLS_ROOT}}/<名稱>/SKILL.md
-  角色檔 →  {{AGENTS_ROOT}}/
+開工前先看 docs/sdlc-mode.md，它宣告這個專案要跑哪幾關；沒有這個檔＝全跑。之所以要有它：檔案缺席只能解讀成「還沒做」，唯有正面存在的宣告才是「刻意不做」。三種模式與「實作、測試兩關永遠不能跳」的下限 → references/tailoring.md。
 
-⚠ 開始判斷之前先看一眼 docs/sdlc-mode.md，它宣告這個專案要跑哪幾關；沒有這個檔就當「全跑」，那是預設值。之所以要有這個檔：檔案缺席永遠只能解讀成「還沒做」，唯有一份正面存在的宣告才能解讀成「刻意不做」，否則下面的規則分不出這兩件事。三種模式、以及「實作與測試兩關永遠不能跳」的下限，見 sdlc-orchestrator/references/tailoring.md。
+### 定位表（由上而下逐條檢查，第一條命中就採用，不再往下看）
 
-- 問題本身還講不清楚（不確定是全新構想還是既有系統的問題／bug 不知道根因或需求在哪／還沒決定要不要做）→ 讀 converge，照做。這一條優先於下面所有條件，包含 docs/ 已經有東西的情況；它純討論、不改任何程式碼或資料庫，講清楚之後再回到本規則重新判斷。
+順序是刻意的：越後面的階段排越前面。這樣做完一關回來重判會往前走，不會被前面某個「一直都成立」的條件吸回去。
 
-- docs/handoff-log.md 裡有任何一節的第一行是「狀態：進行中」→ 那一節就是目前的階段，讀該階段對應的 skill 續作。不要因為標頭已存在就當成做完了。
+| 條件（看 docs/） | Phase（原步驟） | 讀哪個 skill |
+|---|---|---|
+| 問題本身還講不清楚：不知是新構想還是既有系統的問題／bug 不知根因或需求在哪／還沒決定要不要做。**此列優先於以下全部，包含 docs/ 已有東西的情況** | 流程外 | `converge` — 純討論，MUST NOT 改 code／DB；講清楚後回本表重判 |
+| handoff-log.md 任一分節第一行是「狀態：進行中」 | 該分節那一關 | 該 Phase 的 skill，續作 |
+| handoff-log.md 有「## Phase 7」且完成，或系統已上線 | 8 維運（33-35） | `ops-feedback` |
+| 有「## Phase 6」且完成，無 Phase 7 | 7 部署（29-32） | `release-handoff` |
+| 有「## Phase 5」且完成，無 Phase 6 | 6 測試（25-28） | `qa-handoff` |
+| 無「## Phase 5」，且下列任一成立：有 dev-setup.md（創世走完準備）／有 change-specs/ 輕量規格（經 change-request 分診）／有本次變更的單一面向設計文件（design-delta，經 change-request 轉設計後產出） | 5 開發實作（21-24） | `implementation-handoff` |
+| 有 requirements-spec.md，設計文件未齊（判定見下） | 3 設計（11-17） | `system-design` |
+| 有 product-discovery.md，無 requirements-spec.md | 2 需求分析（6-10） | `requirement-scoping` |
+| 有 dev-setup.md 但骨架還沒建起來 | 4 開發前準備（18-20） | `dev-setup` — **限創世**；既有專案不走這關（骨架／版控／排程本來就存在），其唯一不能丟的「測試描述」改由 change-request 或 system-design 產出 |
+| 以上皆不命中 ＋ 全新構想、還沒有任何程式碼 | 1 需求發想（1-5） | 問題／使用者／方案任一不確定 → `product-discovery`。三者都明確而想直接動手也可以，但那等於自願跳過需求與設計、不留 docs/ 產出物 |
+| 以上皆不命中 ＋ 已有在跑的既有程式碼（老專案採用這套流程，只是還沒補 docs/） | 跨 phase | **不要當成新專案。** 瑣碎小改直接動手；需要新設計決策或範圍不確定 → `change-request`（用程式碼現況當基線分診）。這次是修 bug 就先讀 `bug-fix`，它不是另一條流程，只是講清楚修 bug 特有的前置動作（怎麼重現、先寫一個會失敗的測試、找同類），然後把你接回 change-request 與後面的階段 |
 
-- docs/handoff-log.md 有「## Phase 7」而且那一節是「狀態：完成」，或系統已經上線 → 讀 ops-feedback，照做。
+「設計文件未齊」的判定（**只適用創世**；既有系統只補單一面向是正常的）：三者任一即算完成——①有 design.md ②有 architecture.md ＋ db-schema.md／api-spec.md／components.md／modules.md 任一份 ③有 architecture.md 且檔內明寫本專案不涉及資料庫／對外介面。單獨一份 architecture.md 又沒有第③點的聲明，不算完成。
 
-- docs/handoff-log.md 有「## Phase 6」而且那一節是「狀態：完成」，但沒有「## Phase 7」→ 讀 release-handoff，照做。
+### 四條硬規則
 
-- docs/handoff-log.md 有「## Phase 5」而且那一節是「狀態：完成」，但沒有「## Phase 6」→ 讀 qa-handoff，照做。這次有修改行為時，仍要驗證這次變更；但不因為碰到舊程式碼，就要求回頭替與本次無關的既有程式補測試。
-
-- docs/handoff-log.md 沒有「## Phase 5」這一節，而且下列任一成立 → 讀 implementation-handoff，照做：
-    有 docs/dev-setup.md（全新專案走完了開發前準備）
-    或 有 docs/change-specs/ 底下的輕量規格（既有專案經 change-request 分診轉來）
-    或 有這次變更的單一面向設計文件（既有專案經 change-request → system-design 轉來）
-
-- 有 docs/requirements-spec.md，但設計文件還沒齊 → 讀 system-design，照做。設計算完成的條件，三者任一即可：①有 docs/design.md ②有 architecture.md，加上 db-schema.md／api-spec.md／components.md／modules.md 任一份 ③有 architecture.md，且檔內明確寫了本專案不涉及資料庫／對外介面。單獨一份 architecture.md 又沒有第三點的聲明，不算完成。這個判定只適用全新專案——既有系統只補單一設計面向是正常的。
-
-- 有 docs/product-discovery.md，但沒有 docs/requirements-spec.md → 讀 requirement-scoping，照做。
-
-- 有 docs/dev-setup.md 但骨架還沒建起來 → 讀 dev-setup，照做。既有專案不走這一關（骨架／版控／排程本來就存在），它唯一不能丟的「測試描述」改由 change-request 或 system-design 產出。
-
-- 以上都不命中，代表這是一件還沒開始的新工作。先分辨是「全新構想」還是「既有系統」：
-
-  - 全新構想、還沒有任何既有程式碼／系統 → 問題／使用者／方案任一不確定，讀 product-discovery。三者都已明確而想直接動手也可以，但那等於自願跳過需求與設計階段、不會留下 docs/ 產出物。
-
-  - 已經有在跑的既有程式碼（老專案採用這套流程，只是還沒補 docs/）→ 不要當成新專案。瑣碎小改直接動手；需要新設計決策或範圍不確定，讀 change-request，照做（它會用程式碼現況當基線分診）。遵守「既往不溯」：可以修改舊程式，但只改本次必要的部分；測試只針對本次變更及其直接受影響的行為，不為未修改、與本次無關的舊程式碼補測試。這次如果是修 bug，先讀 bug-fix：它不是另一條流程，只是把修 bug 特有的前置動作講清楚（怎麼重現、先寫一個會失敗的測試、找同類），然後把你接回 change-request 與後面的階段。
-
-⚠ 改動這套規則本身之後（不是改產品，是改規則），讀 rule-eval 驗一次它有沒有真的生效。那不是工作路由，是驗規則的方法，所以不在上面的判斷順序裡。
-
-⚠ 判斷「這個專案在不在流程裡」只看 docs/product-discovery.md 這一個檔，不要看其他檔名——requirements-spec.md、design.md、architecture.md、dev-setup.md、handoff-log.md、change-log.md、change-specs/、converge-summary.md、feedback-log.md 這些，既有系統做增量變更時也會產生。
-
-完成任一階段後，回到本規則重新判斷下一步，不要憑對話印象直接續做。不確定現在在哪個階段時，先看 docs/ 裡實際有哪些檔案，不要憑印象判斷。
+- **標頭存在 ≠ 做完。** 每個「## Phase N」分節第一行必須是「狀態：進行中」或「狀態：完成」，照那一行判，不照標頭判。
+- **判「這個專案在不在流程裡」只看 docs/product-discovery.md 這一個檔。** requirements-spec.md、design.md、architecture.md、dev-setup.md、handoff-log.md、change-log.md、change-specs/、converge-summary.md、feedback-log.md 這些，既有系統做增量變更時也會產生，拿它們判會把老專案誤送 Phase 1。
+- **既往不溯。** 可以改舊程式，但只改本次必要的部分；測試只涵蓋本次變更及其直接受影響的行為，不替未修改、與本次無關的舊程式碼補測試。跳過 Phase 3-4 跳掉的是設計與開發前準備，**不包含本次變更的驗證**。
+- **完成任一關後回本表重判下一步**，不要憑對話印象直接續做。改動這套規則本身之後（改規則，不是改產品）→ 讀 rule-eval 驗它有沒有真的生效；那是驗規則的方法，不是工作路由，所以不在上表順序裡。
 ```
 
 

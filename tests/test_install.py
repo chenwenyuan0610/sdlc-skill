@@ -901,7 +901,10 @@ class EntryProtocolRoutingTests(unittest.TestCase):
     def entry_lines(self):
         block = install.extract_entry_protocol()
         self.assertIsNotNone(block, "抽不出 Entry Protocol 區塊")
-        return [l for l in block.split("\n") if l.lstrip().startswith("- ")]
+        # 規則列可能寫成條列（`- …`）或定位表的一列（`| 條件 | Phase | skill |`）。
+        # 這幾個測試守的是「first-hit-wins 的比對順序」，跟排版無關，兩種都要認。
+        return [l for l in block.split("\n")
+                if l.lstrip().startswith("- ") or l.lstrip().startswith("|")]
 
     def first_index(self, lines, name):
         for i, l in enumerate(lines):

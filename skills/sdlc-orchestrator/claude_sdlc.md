@@ -1,7 +1,7 @@
 # 開發工作入口 — 貼進你的 CLAUDE.md / AGENTS.md
 
-> 這是表格版的流程入口，比 `DESIGN.md` 裡的 Entry Protocol 純文字版更好查。**兩者擇一即可**，不要兩份都貼。
-> `install.py` 預設貼的是 Entry Protocol 純文字版；想改用這份表格版，把下面整段複製進你的 `CLAUDE.md`（Claude Code）或 `AGENTS.md`（Codex）取代它。
+> 這是加詳版的流程入口，欄位比 `DESIGN.md` 裡的 Entry Protocol 多（Step 0 速查表、Phase 5-8 工具綁定表）。**兩者擇一即可**，不要兩份都貼。
+> `install.py` 預設貼的是 Entry Protocol（同樣是表格，但更精簡，只保留定位必需的判定）；想改用這份加詳版，把下面整段複製進你的 `CLAUDE.md`（Claude Code）或 `AGENTS.md`（Codex）取代它。
 > 完整判斷規則 → `sdlc-entry.md`，語意衝突以該檔為準。
 
 ---
