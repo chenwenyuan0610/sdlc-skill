@@ -46,7 +46,7 @@ python install.py
 ## Phase 5/6 派工說明（權限與模型）
 
 - 票量大時 `implementation-handoff`（Phase 5）/`qa-handoff`（Phase 6）會依 `references/agent-teams.md` 分級表**自動派** `sdlc-implementer`/`sdlc-reviewer`/`sdlc-verifier` subagent——這是設計行為，不用另外下指令；日常單人跑流程不會派。沒有自訂 agent 型別的環境（如 Codex）改用 embed 方式（見 `agent-teams.md`）。
-- **權限**：派工動作本身不跳提示，但 subagent 動手（Write/Edit、跑品質門禁指令）在 Claude Code 預設權限模式下會逐項請你批准——**卡在權限提示不是流程壞掉**，人在場按批准即可。想無人值守跑完：開 session 用 acceptEdits 模式（Shift+Tab 切換或 `--permission-mode acceptEdits`），或在專案 `.claude/settings.json` 的 `permissions` 設 `"defaultMode": "acceptEdits"` 並補你工具鏈的 allow 規則。<br>⚠ **自動核准模式下 MUST NOT 派 `sdlc-verifier`**——它有 `Bash` 且沒有工具層的唯讀限制（`target=evidence` 需要重跑指令才驗得了證據）。要無人值守只跑 `sdlc-reviewer`，那支的工具只有 `Read/Glob/Grep`，技術上寫不了任何東西。
+- **權限**：派工動作本身不跳提示，但 subagent 動手（Write/Edit、跑品質門禁指令）在 Claude Code 預設權限模式下會逐項請你批准——**卡在權限提示不是流程壞掉**，人在場按批准即可。`sdlc-reviewer` 與 `sdlc-verifier` 現在都有 `Bash`，reviewer 另有窄化 Edit 權限；兩者都 **MUST NOT 在 acceptEdits／bypassPermissions／defaultMode 自動核准模式下派工**。覆核工作需使用有人監督的權限模式，或由環境提供能技術隔離原專案與正式資源的 sandbox。
 - **模型**：三支角色檔都預設 sonnet；只有高複雜票才升 opus，升級條件與判斷軸 → `references/agent-teams.md`「模型選擇」段。
 - **技術棧開發規範**：你的環境若有自己的開發規範 skill，派工 prompt 附上路徑，worker 會讀取遵循；沒有也能跑（本包刻意不含任何技術棧 skill，保持領域中立）。
 

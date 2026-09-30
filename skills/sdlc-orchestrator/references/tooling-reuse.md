@@ -43,7 +43,7 @@
 
 - `qa-handoff` 步驟27 的 `[REQ-nn]`／`[REQ-nn-AC1]` 追溯窮舉核對——**只有「有沒有被任何測試標籤引用到」這部分可腳本化**（每次驗收都要重跑一次的 grep 比對，比對對象是專案的 `requirements-spec.md` 與測試檔，找出零引用的 REQ/AC 候選清單）；「測試是否真的驗證到位」「沒覆蓋的理由是否合理」仍需語意判斷，不在腳本範圍內，腳本只是縮小人工/AI 覆核的範圍
 - `docs/` 產出物「≤200行」長度治理檢查——每次寫產出物都要做的 `wc -l` 檢查
-- `docs/handoff-log.md` 固定標頭（例如 `## Phase 5 — Implementation`）與狀態行（`狀態：進行中`／`狀態：完成`）存在性檢查——每次 phase 交接都要確認的字串搜尋
+- `docs/handoff-log.md` 固定標頭（例如 `## Phase 5 — Implementation`）與狀態行（`狀態：進行中`／`狀態：完成`／合法的 `狀態：不適用（理由：…／決定者：…）`）；Phase 5／6 仍不得使用不適用存在性檢查——每次 phase 交接都要確認的字串搜尋
 - **工單證據欄空白掃描**——`ticket-spec.md` 定義的四種工單（`ISSUE-nn`／`BUG-nn`／`FB-nn`／`FD-nn`）登記在專案 `docs/handoff-log.md`／`docs/change-log.md`／`framework-defects.md` 登記簿裡時，證據欄空白視為不受理，每次登記/覆核都要重查一次
 - `severity-format.md` 四種狀態值（`PASS`／`BLOCKED`／`NEEDS WORK`／`FAIL`）有沒有被自創第五種——每份 reviewer/verifier 報告都要檢查的字串比對
 - **工單編號格式驗證**——`ticket-spec.md` 定義的四種工單前綴＋流水號格式（工作票 `ISSUE-nn`、缺陷 `BUG-nn`、維運回饋 `FB-nn`、框架缺陷 `FD-nn`）是否符合正則，每次開票都要做。⚠ 不含 `REQ-nn`（那是 `traceability.md` 的需求編號，不是工單）與 `CR-nn`（`KNOWN-ISSUES.md` 記載為既有缺口，不在 `ticket-spec.md` 正式定義的四種格式裡，此檢查不應該把它當合法格式驗證）

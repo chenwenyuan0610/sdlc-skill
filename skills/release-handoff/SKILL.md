@@ -18,19 +18,20 @@ description: TRIGGER when 測試通過，要確認可以部署（對應原 SDLC 
 - 不適用：測試還沒過 → 先回 qa-handoff
 
 ## 完成條件（Phase Exit Criteria）
-4 個步驟的 Output 都產出，且通過本階段專屬檢查（完整條目 → `references/phase-exit-criteria.md`）：
+4 個步驟的 Output 與維運模式交接均完成，且通過本階段專屬檢查（完整條目 → `references/phase-exit-criteria.md`）：
 1. 部署檢查清單（通過）
 2. staging 運行
 3. production 上線
 4. 煙霧測試結果（綠燈/退版）
+5. 成功上線後完成維運模式交接：檢查／建立 `docs/sdlc-mode.md`，依 `../sdlc-orchestrator/references/tailoring.md`「宣告檔建立與維運交接時機」記錄模式、理由與決定者。
 
 ## 持久化
-交接結果 MUST 記進 `docs/handoff-log.md`（部署檢查結果、目標環境、煙霧測試結果），**用固定標頭 `## Phase 7 — Release` 分節**。分節的第一行 MUST 是狀態行 `狀態：進行中` 或 `狀態：完成`——**標頭存在不等於做完**，沒有這一行的話下一個接手的人／agent 會誤判本階段已結束而跳過（原因同 `implementation-handoff` 的「## Phase 5」標頭）；專案尚無 `docs/` 資料夾就直接建立，不用先問使用者。
+交接結果 MUST 記進 `docs/handoff-log.md`（部署檢查結果、目標環境、煙霧測試結果），**用固定標頭 `## Phase 7 — Release` 分節**。分節的第一行 MUST 是狀態行 `狀態：進行中`、`狀態：完成`，或符合下段條件的 `狀態：不適用（理由：<一句話>／決定者：<誰>）`——**標頭存在不等於做完**，沒有這一行的話下一個接手的人／agent 會誤判本階段已結束而跳過（原因同 `implementation-handoff` 的「## Phase 5」標頭）；專案尚無 `docs/` 資料夾就直接建立，不用先問使用者。
 
 **⚠ 本次變更不需要部署時**（例如只改文件、或改動不進到任何執行環境）→ 狀態行寫第三個值 `狀態：不適用（理由：<一句話>／決定者：<誰>）`。**理由與決定者缺任一項就退回當「未做」**——空的「不適用」等於默默跳過一關。完整裁剪規則與三種模式 → `../sdlc-orchestrator/references/tailoring.md`。
 
 **⚠ 產出物長度治理**：**單一 `docs/` 產出物 MUST ≤200 行**。超過 MUST 按段落語意拆檔，且**主檔 MUST 保留一頁式索引**（哪一段在哪個檔）。**拆檔 MUST NOT 改變既有段落編號**，否則上下游文件的交叉引用會全斷。**天生會長大的段落一開始就獨立成檔**：原始需求清單、維度覆蓋表／提問記錄／自決與猜測（檔名固定 `docs/<phase>-evidence.md`）、風險清單。
-⚠ **累加型紀錄例外**（`change-log.md`／`handoff-log.md`／`feedback-log.md`）：流水帳沒有段落語意可拆、也沒有段落編號可保留。改用**時間分卷**——超過 200 行時把舊內容整段移到 `<原檔名>-<年份或期別>.md`，主檔保留最近期內容 ＋ 一行分卷索引。**NEVER 為了守行數而刪除歷史。**
+⚠ **累加型紀錄例外**（`change-log.md`／`handoff-log.md`／`feedback-log.md`）：超過 200 行時改用**時間分卷**，把舊詳細紀錄移到 `<原檔名>-<年份或期別>.md`，主檔保留最近期內容與分卷索引。**`handoff-log.md` 另 MUST 保留既有階段標頭、原狀態行與分卷連結**，完整規則與分卷後核對 → `../sdlc-orchestrator/sdlc-entry.md`「handoff-log 分卷時保留階段定位資訊」。**NEVER 為了守行數而刪除歷史。**
 
 ## 流程
 
@@ -61,4 +62,4 @@ description: TRIGGER when 測試通過，要確認可以部署（對應原 SDLC 
 - 卡住的原因是**流程規則本身**（規則寫死了不適用本專案的做法／兩條規則矛盾／判準模糊到判不出來／缺一步接不上）→ **不要就地改規則、不要停工**：append 一列到**框架缺陷登記簿**（status=`proposed`，**證據欄必填**）。登記簿位置 → `../sdlc-orchestrator/references/framework-defects.md`；**該檔可能是登記簿本身，也可能是指向使用環境實際登記簿的指標檔，打開照它說的走**，然後用最接近的合理解讀把工作做完
 
 ## 下一步
-煙霧測試綠燈 → 提示使用者可以接著用 `ops-feedback` 開始維運監控。**不自動呼叫**，只是提醒。
+煙霧測試綠燈且維運模式交接完成 → 提示使用者可以接著用 `ops-feedback` 開始維運監控。宣告檔缺漏或模式待確認時，記錄實際上線結果與交接待辦，完成交接後才標 Phase 7 完成。**不自動呼叫**，只是提醒。
