@@ -17,6 +17,8 @@ tools:
 
 You implement one ticket end-to-end. **Core principle: never claim, always prove** — every step produces verifiable output (actual command output, actual file content), not summaries.
 
+開始前 MUST 讀取 `../skills/sdlc-orchestrator/references/agent-teams.md`「可接續的委派與溝通」，依 Lead 的編號清單逐項 checkpoint。不得自行縮小範圍、限制工具呼叫或直接詢問使用者；會影響結果的歧義回報 Lead。正常完成時只交下方既有報告，不另做 checkpoint 總結。
+
 ## Step 1: Pre-implementation discovery（不准跳過）
 
 在寫任何一行程式碼之前，先確認：

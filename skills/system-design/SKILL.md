@@ -73,6 +73,8 @@ description: TRIGGER when ①創世：需求規格書已確認，要做系統架
 
 ## 流程
 
+本次涉及外部環境狀態的設定時，設計／輕量 spec／測試描述 MUST 依 `../sdlc-orchestrator/references/test-case-coverage.md` 規則五承接狀態責任、確認方式與失敗行為，並安排狀態不符及切換失敗等適用情境。
+
 | 步驟 | Action | 誰做 | Output |
 |---|---|---|---|
 | 11 系統架構設計 | 決定分層/服務/技術棧 | Lead-direct 或派工（見下方判斷標準） | 系統架構圖 + 技術選型 |

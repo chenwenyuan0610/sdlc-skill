@@ -28,9 +28,11 @@ description: TRIGGER when 專案已存在一個運行中/已建置的系統（�
 3. 若判斷「既有範圍內」，已產出輕量 spec/ticket，且**已附測試描述——不分 Tier，一律要**（Tier 0-1 一句話即可；見下方步驟 2 表格與「測試不可省」硬性關卡）
 
 **⚠ 產出物長度治理**：**單一 `docs/` 產出物 MUST ≤200 行**。超過 MUST 按段落語意拆檔，且**主檔 MUST 保留一頁式索引**（哪一段在哪個檔）。**拆檔 MUST NOT 改變既有段落編號**，否則上下游文件的交叉引用會全斷。**天生會長大的段落一開始就獨立成檔**：原始需求清單、維度覆蓋表／提問記錄／自決與猜測（檔名固定 `docs/<phase>-evidence.md`）、風險清單。
-⚠ **累加型紀錄例外**（`change-log.md`／`handoff-log.md`／`feedback-log.md`）：它們是流水帳，**沒有「段落語意」可拆、也沒有段落編號可保留**，套上面的拆檔規則會卡死。改用**時間分卷**——超過 200 行時把舊內容整段移到 `<原檔名>-<年份或期別>.md`，主檔保留最近期內容 ＋ 一行分卷索引。**NEVER 為了守行數而刪除歷史。**
+⚠ **累加型紀錄例外**（`change-log.md`／`handoff-log.md`／`feedback-log.md`）：超過 200 行時改用**時間分卷**，把舊詳細紀錄移到 `<原檔名>-<年份或期別>.md`，主檔保留最近期內容與分卷索引。**`handoff-log.md` 另 MUST 保留既有階段標頭、原狀態行與分卷連結**，完整規則與分卷後核對 → `../sdlc-orchestrator/sdlc-entry.md`「handoff-log 分卷時保留階段定位資訊」。**NEVER 為了守行數而刪除歷史。**
 
 ## 流程
+
+本次涉及外部環境狀態的設定時，設計／輕量 spec／測試描述 MUST 依 `../sdlc-orchestrator/references/test-case-coverage.md` 規則五承接狀態責任、確認方式與失敗行為，並安排狀態不符及切換失敗等適用情境。
 
 ### 步驟 1：取得基線脈絡（三層 fallback，不要在第一層就放棄）
 0. **出口**：連「這次變更是什麼」本身都講不清楚（不是找不到基線文件，是需求本身模糊）→ 停下來，轉 `converge`，等共識/路由確定後再回來走下面三層 fallback。
@@ -86,7 +88,7 @@ description: TRIGGER when 專案已存在一個運行中/已建置的系統（�
 
 **輕量 spec MUST 獨立落檔，NEVER 只留在對話裡**：分診到「在既有範圍內」時產出的輕量 spec ＋ 測試描述，MUST 寫成 `docs/change-specs/<變更名>.md`，並在 `docs/change-log.md` 那一列回指它。**這份 spec 的第一段就是該次變更的 `REQ-nn` 表**——演進模式沒有 `requirements-spec.md`，它就是這次變更的唯一真相源，下游的設計、實作、測試都只引用 `[REQ-07]` 不重抄內容（規則與豁免條件 → `../sdlc-orchestrator/references/traceability.md`）。理由：`qa-handoff` 明文要拿這份 spec 當測試覆核依據——**只存在於對話裡的 spec，等於下游被要求去讀一份不存在的檔案**；且工作階段一結束就沒有人接得上（同 `converge` 共識摘要的落檔理由）。`change-log.md` 只記「這次做了什麼、走哪條路」，spec 內容不塞進去（會撐破下方的 200 行治理）。
 
-**模式宣告（第一次用本 skill 時做一次就好）**：專案若還沒有 `docs/sdlc-mode.md`，在這裡建立它並寫 `mode: evolution` ＋理由＋決定者（格式與三種模式 → `../sdlc-orchestrator/references/tailoring.md`）。**沒有這個檔的專案一律當「全跑」**——所以少了它，下一個接手的人會以為這個專案該走完九關。已經有這個檔就不要改，模式變更是使用者的決定不是執行者的。
+**模式宣告由上線交接負責**：本 skill 只讀取 `docs/sdlc-mode.md`，不在首次分診後自動建立或切換模式。宣告應在 Phase 7 成功上線交接時建立，Phase 8 接手時補查；缺漏時提示交接待辦。建立時機、模式變更權限及既有專案首次入場例外 → `../sdlc-orchestrator/references/tailoring.md`。
 
 ## 停止條件
 - 使用者提供的既有文件內容太舊/跟現況對不上 → 停下來確認是否需要先更新既有文件，不要用過時脈絡做判斷
